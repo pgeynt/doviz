@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Price Calculator</title>
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/css/flag-icon.min.css"/>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    body {
+      min-width: 280px;
+      padding: 8px;
+      background-color: #02153D;
+      color: #fff;
+    }
+    .rate-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      background: #02153D;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      border: 1px solid #4B227A;
+      box-shadow: 0 2px 8px rgba(1, 151, 175, 0.2);
+    }
+    .rate-item {
+      text-align: center;
+      flex: 1;
+      padding: 0 3px;
+    }
+    .rate-item span:first-child {
+      font-size: 0.7rem;
+      color: #00EED0;
+      display: block;
+      margin-bottom: 2px;
+    }
+    .rate-value {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #fff;
+    }
+    .divider {
+      width: 1px;
+      height: 25px;
+      background-color: #4B227A;
+      margin: 0 6px;
+    }
+    .currency-converter {
+      background: #02153D;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(1, 151, 175, 0.2);
+      border: 1px solid #4B227A;
+    }
+    .radio-group {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    .radio-container {
+      position: relative;
+    }
+    .radio-container input[type="radio"] {
+      display: none;
+    }
+    .radio-container label {
+      padding: 6px 12px;
+      border-radius: 20px;
+      background-color: #02153D;
+      border: 1px solid #4B227A;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin: 0;
+      font-size: 0.85rem;
+      color: #fff;
+      display: inline-block;
+    }
+    .radio-container input[type="radio"]:checked + label {
+      background-color: #4B227A;
+      color: #00EED0;
+      border-color: #0197AF;
+      box-shadow: 0 2px 4px rgba(0,123,255,0.2);
+    }
+    .alert {
+      margin-bottom: 10px;
+      border: none;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .cost-inputs {
+      margin-top: 12px;
+      padding: 12px;
+      background: #02153D;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(1, 151, 175, 0.2);
+      border: 1px solid #4B227A;
+    }
+    
+    .percentage-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px;
+      background: rgba(2, 21, 61, 0.7);
+      border-radius: 8px;
+      border: 1px solid #4B227A;
+      margin-bottom: 12px;
+    }
+
+    .percentage-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .percentage-label {
+      width: 80px;
+      font-size: 0.8rem;
+      color: #00EED0;
+      font-weight: 500;
+    }
+
+    .percentage-input {
+      flex: 1;
+      height: 32px;
+      padding: 4px 8px;
+      border: 2px solid #4B227A;
+      border-radius: 6px;
+      background: rgba(2, 21, 61, 0.9);
+      color: #fff;
+      font-size: 0.9rem;
+    }
+
+    .operation-toggle {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #4B227A;
+      color: #00EED0;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 16px;
+      user-select: none;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(0, 238, 208, 0.2);
+    }
+
+    .kosatec-only {
+      margin-top: 8px;
+      padding: 8px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .kosatec-only .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #00EED0;
+      font-size: 0.9rem;
+    }
+
+    .discount-info {
+      margin-top: 10px;
+    }
+    
+    .discount-text {
+      color: #28a745;
+      font-size: 0.9rem;
+      margin-bottom: 5px;
+    }
+
+    .checkbox-group {
+      margin-top: 15px;
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 0;
+    }
+
+    .checkbox-container input[type="checkbox"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid #4B227A;
+      border-radius: 4px;
+      background: rgba(2, 21, 61, 0.7);
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .checkbox-container input[type="checkbox"]:checked {
+      background: linear-gradient(145deg, #4B227A, #0197AF);
+      border-color: #00EED0;
+    }
+
+    .checkbox-container input[type="checkbox"]:checked::before {
+      content: '×';
+      position: absolute;
+      color: #00EED0;
+      font-size: 16px;
+      line-height: 1;
+      font-weight: bold;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-shadow: 0 0 5px rgba(0, 238, 208, 0.5);
+    }
+
+    .checkbox-container input[type="checkbox"]:hover {
+      border-color: #00EED0;
+      box-shadow: 0 0 8px rgba(0, 238, 208, 0.3);
+    }
+
+    .checkbox-container input[type="checkbox"]:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0, 238, 208, 0.2);
+    }
+
+    /* Tooltip stili */
+    [data-tooltip] {
+      position: relative;
+    }
+
+    [data-tooltip]:hover:after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #4B227A;
+      color: #fff;
+      padding: 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      width: 200px;
+      z-index: 100;
+      margin-bottom: 8px;
+      line-height: 1.4;
+      border: 1px solid #0197AF;
+    }
+
+    [data-tooltip]:hover:before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 15px;
+      border: 6px solid transparent;
+      border-top: 6px solid #4B227A;
+      margin-bottom: 4px;
+    }
+
+    .domain-card {
+      background: #02153D;
+      padding: 8px 12px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(1, 151, 175, 0.2);
+      margin: 0 auto 12px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-width: 200px;
+      max-width: fit-content;
+      text-align: center;
+      border: 1px solid #4B227A;
+    }
+
+    .domain-label {
+      font-size: 0.75rem;
+      color: #00EED0;
+      font-weight: 500;
+    }
+
+    .domain-text {
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: monospace;
+      color: #fff;
+    }
+
+    .domain-supported {
+      color: #00EED0;
+      text-shadow: 0 0 10px rgba(0, 238, 208, 0.5);
+    }
+
+    .domain-unsupported {
+      color: #8B98B5;
+      text-shadow: 0 0 10px rgba(139, 152, 181, 0.3);
+    }
+
+    /* Animasyon için fade-in efekti */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate__fadeIn {
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .container-fluid {
+      padding-top: 8px;
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+
+    .refresh-button {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #4B227A;
+      border: none;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(1, 151, 175, 0.3);
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .refresh-button:hover {
+      background: #0197AF;
+    }
+
+    .refresh-button svg {
+      width: 14px;
+      height: 14px;
+      transition: transform 0.5s ease;
+    }
+
+    .refresh-button:active {
+      transform: scale(0.95);
+    }
+
+    .refresh-button.spinning svg {
+      transform: rotate(360deg);
+    }
+
+    /* Ekleme butonu için stil */
+    .add-button {
+      position: fixed;
+      bottom: 16px;
+      left: 58px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #4B227A, #0197AF);
+      border: 2px solid rgba(0, 238, 208, 0.3);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(1, 151, 175, 0.3);
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .add-button:hover {
+      background: linear-gradient(145deg, #0197AF, #00EED0);
+      box-shadow: 0 0 15px rgba(0, 238, 208, 0.4);
+    }
+
+    .add-button:active {
+      transform: scale(0.95);
+    }
+    
+    /* Ayarlar butonu için stil */
+    .settings-button {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #4B227A, #0197AF);
+      border: 2px solid rgba(0, 238, 208, 0.3);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(1, 151, 175, 0.3);
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .settings-button:hover {
+      background: linear-gradient(145deg, #0197AF, #00EED0);
+      box-shadow: 0 0 15px rgba(0, 238, 208, 0.4);
+    }
+
+    .settings-button:active {
+      transform: scale(0.95);
+    }
+
+    /* Checkbox özelleştirme */
+    input[type="checkbox"] {
+      accent-color: #4B227A;
+    }
+
+    /* Input number ok butonları özelleştirme */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      background-color: #4B227A;
+    }
+
+    /* Scrollbar özelleştirme */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #02153D;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(145deg, #4B227A, #0197AF);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(145deg, #0197AF, #00EED0);
+    }
+
+    /* Gradient efektleri */
+    .rate-container, .currency-converter, .cost-inputs, .domain-card {
+      background: linear-gradient(145deg, rgba(2, 21, 61, 0.9), rgba(75, 34, 122, 0.9));
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(1, 151, 175, 0.3);
+    }
+
+    .refresh-button {
+      background: linear-gradient(145deg, #4B227A, #0197AF);
+      border: 2px solid rgba(0, 238, 208, 0.3);
+    }
+
+    .refresh-button:hover {
+      background: linear-gradient(145deg, #0197AF, #00EED0);
+      box-shadow: 0 0 15px rgba(0, 238, 208, 0.4);
+    }
+
+    .radio-container label {
+      background: rgba(2, 21, 61, 0.7);
+      border: 2px solid #4B227A;
+      backdrop-filter: blur(5px);
+      transition: all 0.3s ease;
+    }
+
+    .radio-container input[type="radio"]:checked + label {
+      background: linear-gradient(145deg, #4B227A, #0197AF);
+      border-color: #00EED0;
+      color: #00EED0;
+      text-shadow: 0 0 10px rgba(0, 238, 208, 0.5);
+    }
+
+    /* Ek maliyet input grubu için özel stil */
+    .discount-container {
+      background: rgba(2, 21, 61, 0.7);
+      padding: 8px;
+      border-radius: 8px;
+      border: 2px solid #4B227A;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .discount-container .checkbox-container {
+      margin: 0;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .discount-container input {
+      background: rgba(2, 21, 61, 0.7);
+      border: 2px solid #4B227A;
+      border-radius: 6px;
+      color: #fff;
+      padding: 4px 8px;
+      width: 80px;
+      height: 25px;
+      font-size: 0.85rem;
+      margin-left: auto;
+    }
+
+    .discount-container span {
+      font-size: 0.9rem;
+      color: #495057;
+      margin-left: 4px;
+    }
+
+    /* Glow efektleri */
+    .rate-value {
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    }
+
+    .input-group-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .operation-toggle {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #4B227A;
+      color: #00EED0;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 16px;
+      user-select: none;
+      transition: all 0.3s ease;
+    }
+
+    .operation-toggle.add {
+      background: #0197AF;
+    }
+
+    .kosatec-only {
+      margin-top: 12px;
+      padding: 8px;
+      border-radius: 8px;
+      background: rgba(2, 21, 61, 0.7);
+      border: 1px solid #4B227A;
+    }
+
+    .kosatec-only .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #00EED0;
+    }
+
+    /* Modal Stilleri */
+    .add-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      z-index: 2000;
+      overflow: auto;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .add-modal-content {
+      background: linear-gradient(145deg, rgba(2, 21, 61, 0.95), rgba(75, 34, 122, 0.95));
+      margin: 10% auto;
+      width: 85%;
+      max-width: 320px;
+      border-radius: 12px;
+      box-shadow: 0 5px 20px rgba(0, 238, 208, 0.4);
+      border: 2px solid rgba(1, 151, 175, 0.5);
+      backdrop-filter: blur(10px);
+      animation: fadeInModal 0.3s ease-out;
+    }
+    
+    @keyframes fadeInModal {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .add-modal-header {
+      padding: 12px 15px;
+      border-bottom: 1px solid rgba(1, 151, 175, 0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(145deg, #4B227A, #0197AF);
+      border-radius: 10px 10px 0 0;
+    }
+    
+    .add-modal-header h3 {
+      margin: 0;
+      color: #00EED0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-shadow: 0 0 10px rgba(0, 238, 208, 0.3);
+      letter-spacing: 0.5px;
+    }
+    
+    .close-modal {
+      color: #fff;
+      font-size: 22px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .close-modal:hover {
+      color: #00EED0;
+      text-shadow: 0 0 10px rgba(0, 238, 208, 0.5);
+    }
+    
+    .add-modal-body {
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .modal-domain-display {
+      background: rgba(2, 21, 61, 0.7);
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #4B227A;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .modal-label {
+      color: #00EED0;
+      font-size: 0.85rem;
+      font-weight: 500;
+      flex-shrink: 0;
+      margin-right: 8px;
+    }
+    
+    .modal-domain-name {
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 600;
+      font-family: monospace;
+      text-align: right;
+      word-break: break-all;
+      flex: 1;
+    }
+    
+    .xpath-input-group {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+    }
+    
+    .xpath-input {
+      flex: 1;
+      background: rgba(2, 21, 61, 0.7);
+      border: 2px solid #4B227A;
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: #fff;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+      height: 38px;
+    }
+    
+    .xpath-input:focus {
+      border-color: #0197AF;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(1, 151, 175, 0.3);
+    }
+    
+    .add-xpath-btn {
+      width: 38px;
+      height: 38px;
+      min-width: 38px;
+      background: linear-gradient(145deg, #4B227A, #0197AF);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    
+    .add-xpath-btn:hover {
+      background: linear-gradient(145deg, #0197AF, #00EED0);
+      box-shadow: 0 0 15px rgba(0, 238, 208, 0.4);
+    }
+    
+    .add-xpath-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .currency-select-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .currency-select {
+      flex: 1;
+      background: rgba(2, 21, 61, 0.7);
+      border: 2px solid #4B227A;
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: #fff;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300EED0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 1em;
+      height: 38px;
+    }
+    
+    .currency-select:focus {
+      border-color: #0197AF;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(1, 151, 175, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="container-fluid p-2">
+    <!-- Refresh Button -->
+    <button id="refreshSelectors" class="refresh-button" title="Seçicileri Yenile">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+      </svg>
+    </button>
+
+    <!-- Settings Button -->
+    <button id="settingsButton" class="settings-button" title="Ayarlar">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
+        <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/>
+      </svg>
+    </button>
+
+    <!-- Add Button -->
+    <button id="addItem" class="add-button" title="Yeni Ekle">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+      </svg>
+    </button>
+
+    <!-- Domain Display Card -->
+    <div class="domain-card animate__animated animate__fadeIn">
+      <span id="currentDomain" class="domain-text"></span>
+    </div>
+
+    <!-- Exchange Rate Display -->
+    <div class="rate-container">
+      <div class="rate-item">
+        <span>Dolar</span>
+        <span class="rate-value" id="usdRate">-</span>
+      </div>
+      <div class="divider"></div>
+      <div class="rate-item">
+        <span>Euro</span>
+        <span class="rate-value" id="euroRate">-</span>
+      </div>
+      <div class="divider"></div>
+      <div class="rate-item">
+        <span>EUR/USD</span>
+        <span class="rate-value" id="eurUsdRate">-</span>
+      </div>
+      <div class="divider"></div>
+      <div class="rate-item">
+        <span>Yuan</span>
+        <span class="rate-value" id="cnyRate">-</span>
+      </div>
+    </div>
+    
+    <div class="currency-converter">
+      <div class="radio-group">
+        <div class="radio-container">
+          <input type="radio" id="tl-to-usd" name="conversion" value="usd" checked>
+          <label for="tl-to-usd">TL → USD</label>
+        </div>
+        <div class="radio-container">
+          <input type="radio" id="tl-to-eur" name="conversion" value="eur">
+          <label for="tl-to-eur">TL → EUR</label>
+        </div>
+        <div class="radio-container">
+          <input type="radio" id="tl-to-cny" name="conversion" value="cny">
+          <label for="tl-to-cny">TL → CNY</label>
+        </div>
+      </div>
+    </div>
+    
+    <div class="cost-inputs">
+      <div class="percentage-controls">
+        <div class="percentage-row">
+          <span class="percentage-label">FM</span>
+          <input type="number" id="finance-cost" class="percentage-input" min="0" max="100" step="0.01" placeholder="Örn: 3">
+          <div class="operation-toggle" id="finance-operation-indicator">-</div>
+        </div>
+        
+        <div class="percentage-row">
+          <span class="percentage-label">RMA/Yol</span>
+          <input type="number" id="shipping-cost" class="percentage-input" min="0" max="100" step="0.01" placeholder="Önce finans maliyetini girin" disabled>
+          <div class="operation-toggle" id="shipping-operation-indicator">-</div>
+        </div>
+
+        <div class="kosatec-only" style="display: none;">
+          <label class="checkbox-container" data-tooltip="İşaretlendiğinde yüzdeleri ekler, işaretlenmediğinde çıkarır">
+            <input type="checkbox" id="percentage-operation">
+            <span class="checkbox-text">Yüzdeleri Ekle</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="checkbox-group">
+        <div class="discount-container" style="display: flex; align-items: center; gap: 10px;">
+          <label class="checkbox-container" data-tooltip="Birim olarak indirim uygular. Miktar girilmezse 150 varsayılan olarak uygulanır">
+            <input type="checkbox" id="extra-cost">
+            <span class="checkbox-text">Ek Maliyet</span>
+          </label>
+          <input 
+            type="number" 
+            id="discount-amount" 
+            class="form-control form-control-sm" 
+            style="width: 80px; height: 25px;" 
+            placeholder="150"
+            min="0"
+          >
+          <span style="font-size: 0.9rem; color: #495057;">Birim</span>
+        </div>
+
+        <label class="checkbox-container mt-2" data-tooltip="KDV'yi düşürerek hesaplama yapar (%20)">
+          <input type="checkbox" id="kdv-discount">
+          <span class="checkbox-text">KDV'yi Düşürt</span>
+        </label>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Ekleme Modalı -->
+  <div id="addModal" class="add-modal">
+    <div class="add-modal-content">
+      <div class="add-modal-header">
+        <h3>XPath Ekle</h3>
+        <span class="close-modal">&times;</span>
+      </div>
+      <div class="add-modal-body">
+        <!-- Domain Gösterimi -->
+        <div class="modal-domain-display">
+          <span class="modal-label">Aktif Domain:</span>
+          <span id="modalDomainName" class="modal-domain-name"></span>
+        </div>
+        
+        <!-- XPath Input -->
+        <div class="xpath-input-group">
+          <input type="text" id="xpathInput" class="xpath-input" placeholder="XPath ifadesi girin...">
+          <button id="addXPathBtn" class="add-xpath-btn" title="Ekle">+</button>
+        </div>
+        
+        <!-- Para Birimi Seçimi -->
+        <div class="currency-select-group">
+          <span class="modal-label">Para Birimi:</span>
+          <select id="currencySelect" class="currency-select">
+            <option value="TL">TL</option>
+            <option value="USD">Dolar</option>
+            <option value="EUR">Euro</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="utils/priceDisplay.js"></script>
+  <script src="utils/currency.js"></script>
+  <script src="utils/htmlRenderer.js"></script>
+  <script src="utils/observer.js"></script>
+  <script src="popup.js"></script>
+  
+  <!-- Ayarlar Modal -->
+  <div id="settings-modal" style="
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+  ">
+    <div class="settings-modal-content" style="
+      background: linear-gradient(to bottom, #02153D, #0a1f4d);
+      border-radius: 8px;
+      width: 90%;
+      max-width: 350px;
+      padding: 15px;
+      box-shadow: 0 4px 16px rgba(0, 238, 208, 0.3);
+      border: 1px solid #4B227A;
+      color: white;
+      overflow: hidden;
+    ">
+      <div style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #4B227A;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+      ">
+        <h3 style="
+          margin: 0;
+          font-size: 16px;
+          color: #00EED0;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        ">
+          <span style="font-size: 18px;">⚙️</span> Kayıtlı Domainler
+        </h3>
+        <span class="close-modal" id="close-settings-modal" style="
+          font-size: 24px;
+          cursor: pointer;
+          color: #666;
+          transition: color 0.2s ease;
+        ">&times;</span>
+      </div>
+      
+      <div id="saved-domains-container" style="
+        max-height: 300px;
+        overflow-y: auto;
+        margin-bottom: 15px;
+      ">
+        <!-- Kayıtlı domainler dinamik olarak buraya eklenecek -->
+        <div class="no-domains" style="
+          text-align: center;
+          padding: 20px;
+          color: #999;
+          font-style: italic;
+        ">Henüz kayıtlı domain yok</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
+

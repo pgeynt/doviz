@@ -1,0 +1,122 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+}
+html {
+  scroll-behavior: smooth;
+}
+.container {
+  width: 350px; /* Buradaki genişliği ayarlayarak daha geniş hale getirebilirsiniz */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Hafif bir gölge ekle */
+  overflow: hidden; /* İçerik taşmasını engelle */
+  padding: 15px; /* İçerik kenarlarına biraz boşluk ekle */
+  background: #fff; /* Beyaz arka plan rengi */
+  border-radius: 10px; /* Köşeleri yuvarlat */
+}
+
+h1 {
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+label {
+  font-size: 14px;
+}
+
+.badge-info {
+  font-size: 1rem;
+  padding: 0.4em 0.6em;
+  width: 100%;
+  text-align: center;
+}
+
+.form-group {
+  margin-bottom: 10px;
+}
+
+.form-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.region-form {
+  display: none;
+}
+
+/* Button Group için border-radius */
+.btn-group .btn {
+  width: 40px; /* Buton genişliği */
+  height: 30px; /* Buton yüksekliği */
+  background-size: cover; /* Arka plan resmini butona sığdır */
+  background-repeat: no-repeat; /* Arka plan tekrar etmesin */
+  background-position: center; /* Arka plan ortalansın */
+  border: 1px solid transparent; /* Başlangıçta sınır görünmesin */
+  border-radius: 5px; /* Köşeleri hafifçe yuvarlat */
+  margin-right: 5px; /* Butonlar arasına boşluk ekle */
+  position: relative; /* İçerik pozisyonlandırma için relative kullan */
+  overflow: hidden; /* İçerik taşmasını gizle */
+  transition: all 0.3s ease; /* Geçiş efekti */
+}
+
+.btn-group .btn:last-child {
+  margin-right: 0; /* Son butonun sağında boşluk olmasın */
+}
+
+/* Aktif butonlar için stil */
+.btn-group .btn.active {
+  box-shadow: 0px 0px 25px rgba(255, 0, 0, 0.5); /* Hafif mavi bir gölge */
+}
+.btn-group .btn:hover {
+  border-color: #1b1c1e; /* Hover durumunda sınır rengi */
+}
+.btn-group .btn::after {
+  content: attr(data-code); /* Buton üzerindeki yazı */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* Yarı saydam karartı */
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  opacity: 0;
+  transition: opacity 0.3s ease; /* Yumuşak geçiş efekti */
+}
+
+.btn-group .btn:hover::after {
+  opacity: 1; /* Hover olduğunda görünür yap */
+}
+/* Tilting div için border-radius */
+#exchangeRateDisplay {
+  border-radius: 10px; /* Köşeleri yuvarlat */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Hafif bir gölge ekle */
+}
+
+/* Kaydırma çubuğu stilini özelleştir */
+::-webkit-scrollbar {
+  width: 8px;  /* Kaydırma çubuğunun genişliği */
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;  /* Kaydırma çubuğu arka planı */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #5bc0de;  /* Kaydırma çubuğu rengi */
+  border-radius: 10px;  /* Köşeleri yuvarlat */
+  transition: background 0.3s ease; /* Geçiş efekti için süre ve zamanlama işlevi */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4c8cd0;  /* Fare üzerinde olduğunda kaydırma çubuğu rengi */
+}
+
+::-webkit-scrollbar-button {
+  display: none; /* Yukarı ve aşağı okları gizle */
+}
+
+

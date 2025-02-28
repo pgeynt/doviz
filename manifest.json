@@ -1,0 +1,82 @@
+{
+  "manifest_version": 3,
+  "name": "Price Calculator",
+  "version": "1.0",
+  "description": "Döviz kuru ile fiyat hesaplama uzantısı",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://kur.doviz.com/*",
+    "https://www.doviz.com/*",
+    "https://www.akakce.com/*",
+    "https://www.amazon.com.tr/*",
+    "https://www.hepsiburada.com/*",
+    "https://www.trendyol.com/*",
+    "https://shop.kosatec.de/*",
+    "https://www.imcopex.shop/*",
+    "https://www.siewert-kau.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://kur.doviz.com/serbest-piyasa/amerikan-dolari",
+        "https://kur.doviz.com/serbest-piyasa/euro",
+        "https://www.doviz.com/pariteler/eur-usd",
+        "https://kur.doviz.com/serbest-piyasa/cin-yuani",
+        "https://www.akakce.com/*",
+        "https://www.amazon.com.tr/*",
+        "https://www.hepsiburada.com/*",
+        "https://www.trendyol.com/*",
+        "https://shop.kosatec.de/*",
+        "https://www.imcopex.shop/*",
+        "https://www.siewert-kau.com/*"
+      ],
+      "js": [
+        "utils/currency.js",
+        "utils/domainHandler.js",
+        "utils/priceDisplay.js",
+        "utils/observer.js",
+        "utils/htmlRenderer.js",
+        "domains/akakce.js",
+        "domains/amazon.js",
+        "domains/hepsiburada.js",
+        "domains/trendyol.js",
+        "domains/kosatec.js",
+        "domains/imcopex.js",
+        "domains/siewert-kau.js",
+        "domainConfigs.js",
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "refresh-selectors": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+E"
+      },
+      "description": "Seçicileri Yenile"
+    }
+  },
+  "chrome_ui_overrides": {
+    "popup_window": {
+      "corner_radius": 12
+    }
+  },
+  "chrome_style": {
+    "frame": {
+      "type": "none",
+      "color": "#02153D"
+    }
+  }
+}
