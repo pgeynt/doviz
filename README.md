@@ -1,1 +1,1 @@
-THATS A DÖV İZ EXTENTİON
+Elmacık Bişilim için geliştirilmiş bir döviz extention u
