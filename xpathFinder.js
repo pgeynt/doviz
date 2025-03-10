@@ -5,6 +5,54 @@ console.log("XPath Finder content script yüklendi");
 let finderActive = false;
 let finderBar = null;
 let activeElement = null;
+let initializationAttempted = false; // Başlatma denemesi yapıldı mı
+
+// Başlangıç için kendini initialize etme
+function initializeFinder() {
+  if (initializationAttempted) return;
+  
+  initializationAttempted = true;
+  console.log("XPath Finder otomatik başlatma kontrolü yapılıyor...");
+  
+  try {
+    // Sayfa tamamen yüklendi mi kontrol et
+    if (document.readyState === 'complete') {
+      console.log("Sayfa tamamen yüklendi, XPath Finder hazır");
+      notifyReady();
+    } else {
+      // Sayfa yüklenme olayını dinle
+      window.addEventListener('load', () => {
+        console.log("Sayfa yüklendi, XPath Finder hazır");
+        notifyReady();
+      });
+    }
+  } catch (error) {
+    console.error("XPath Finder başlatma hatası:", error);
+  }
+}
+
+// Hazır olduğunu bildir
+function notifyReady() {
+  try {
+    chrome.runtime.sendMessage({
+      action: "xpathFinderReady"
+    });
+    console.log("Hazır olduğu bildirildi");
+    
+    // Hazır olduğunda otomatik olarak aktivasyonu kontrol et
+    setTimeout(() => {
+      if (!finderActive) {
+        console.log("XPath Finder otomatik aktivasyon kontrolü");
+        chrome.runtime.sendMessage({ action: "xpathFinderCheckActivation" });
+      }
+    }, 1000);
+  } catch(e) {
+    console.error("Hazır bilgisi gönderilemedi:", e);
+  }
+}
+
+// Sayfa yüklenir yüklenmez başlat
+initializeFinder();
 
 // XPath oluşturma fonksiyonu
 function getElementXPath(element) {
@@ -92,383 +140,461 @@ function getElementXPathWithAttributes(element) {
 
 // XPath Finder çubuğunu oluştur
 function createFinderBar() {
-  if (finderBar) return;
+  // Eğer çubuk zaten varsa, tekrar oluşturmaya çalışma
+  if (finderBar && document.body.contains(finderBar)) {
+    console.log("XPath Finder bar zaten mevcut");
+    return;
+  }
   
-  // Ana container
-  finderBar = document.createElement('div');
-  finderBar.id = 'xpath-finder-bar';
-  finderBar.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    background: linear-gradient(to bottom, #4b6cb7, #182848);
-    color: white;
-    padding: 10px 15px;
-    font-family: Arial, sans-serif;
-    font-size: 14px;
-    z-index: 999999;
-    display: flex;
-    align-items: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  `;
+  // Eğer eski bir çubuk varsa ama DOM'da değilse temizle
+  if (finderBar) {
+    console.log("Eski XPath Finder bar temizleniyor");
+    finderBar = null;
+  }
   
-  // Başlık
-  const title = document.createElement('div');
-  title.textContent = 'XPath Finder';
-  title.style.cssText = `
-    font-weight: bold;
-    margin-right: 15px;
-    font-size: 16px;
-  `;
-  finderBar.appendChild(title);
-  
-  // XPath ve CSS Selector seçim dropdown'u
-  const selectorDropdown = document.createElement('select');
-  selectorDropdown.id = 'selector-type-dropdown';
-  selectorDropdown.style.cssText = `
-    margin-right: 10px;
-    padding: 6px;
-    border-radius: 4px;
-    border: none;
-    background: rgba(255,255,255,0.9);
-    font-family: Arial, sans-serif;
-  `;
-  
-  const xpathOption = document.createElement('option');
-  xpathOption.value = 'xpath';
-  xpathOption.textContent = 'XPath';
-  selectorDropdown.appendChild(xpathOption);
-  
-  const cssOption = document.createElement('option');
-  cssOption.value = 'css';
-  cssOption.textContent = 'CSS Selector';
-  selectorDropdown.appendChild(cssOption);
-  
-  // Dropdown değişikliğini izle
-  selectorDropdown.addEventListener('change', (e) => {
-    console.log(`Seçici tipi değişti: ${e.target.value}`);
-  });
-  
-  finderBar.appendChild(selectorDropdown);
-  
-  // XPath input alanı
-  const xpathInput = document.createElement('input');
-  xpathInput.id = 'xpath-finder-input';
-  xpathInput.type = 'text';
-  xpathInput.readOnly = true;
-  xpathInput.style.cssText = `
-    flex: 1;
-    padding: 6px 10px;
-    border: none;
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
-    margin-right: 10px;
-    background: rgba(255,255,255,0.9);
-  `;
-  finderBar.appendChild(xpathInput);
-  
-  // Kopyalama butonu
-  const copyButton = document.createElement('button');
-  copyButton.textContent = 'Kopyala';
-  copyButton.id = 'xpath-finder-copy-button';
-  copyButton.style.cssText = `
-    background: #27ae60;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 6px 12px;
-    margin-right: 10px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background 0.2s;
-    user-select: none;
-    position: relative;
-    z-index: 9999999;
-  `;
-  copyButton.addEventListener('mouseenter', () => {
-    copyButton.style.background = '#2ecc71';
-  });
-  copyButton.addEventListener('mouseleave', () => {
-    copyButton.style.background = '#27ae60';
-  });
-  
-  // Tamamen yeniden düzenlenmiş kopyalama fonksiyonu
-  const copyXPathToClipboard = (event) => {
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
+  try {
+    // Ana container
+    finderBar = document.createElement('div');
+    finderBar.id = 'xpath-finder-bar';
+    finderBar.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to bottom, #4b6cb7, #182848);
+      color: white;
+      padding: 10px 15px;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      z-index: 999999;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    `;
     
-    console.log("Kopyala butonu tıklandı");
+    // Başlık
+    const title = document.createElement('div');
+    title.textContent = 'XPath Finder';
+    title.style.cssText = `
+      font-weight: bold;
+      margin-right: 15px;
+      font-size: 16px;
+    `;
+    finderBar.appendChild(title);
     
-    // Görsel geri bildirim
-    copyButton.style.background = '#219a52';
-    copyButton.style.boxShadow = 'inset 0 0 5px rgba(0,0,0,0.5)';
+    // XPath ve CSS Selector seçim dropdown'u
+    const selectorDropdown = document.createElement('select');
+    selectorDropdown.id = 'selector-type-dropdown';
+    selectorDropdown.style.cssText = `
+      margin-right: 10px;
+      padding: 6px;
+      border-radius: 4px;
+      border: none;
+      background: rgba(255,255,255,0.9);
+      font-family: Arial, sans-serif;
+    `;
     
-    try {
-      const input = document.getElementById('xpath-finder-input');
-      const xpathValue = input.value;
+    const xpathOption = document.createElement('option');
+    xpathOption.value = 'xpath';
+    xpathOption.textContent = 'XPath';
+    selectorDropdown.appendChild(xpathOption);
+    
+    const cssOption = document.createElement('option');
+    cssOption.value = 'css';
+    cssOption.textContent = 'CSS Selector';
+    selectorDropdown.appendChild(cssOption);
+    
+    // Dropdown değişikliğini izle
+    selectorDropdown.addEventListener('change', (e) => {
+      console.log(`Seçici tipi değişti: ${e.target.value}`);
+    });
+    
+    finderBar.appendChild(selectorDropdown);
+    
+    // XPath input alanı
+    const xpathInput = document.createElement('input');
+    xpathInput.id = 'xpath-finder-input';
+    xpathInput.type = 'text';
+    xpathInput.readOnly = true;
+    xpathInput.style.cssText = `
+      flex: 1;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      margin-right: 10px;
+      background: rgba(255,255,255,0.9);
+    `;
+    finderBar.appendChild(xpathInput);
+    
+    // Kopyalama butonu
+    const copyButton = document.createElement('button');
+    copyButton.textContent = 'Kopyala';
+    copyButton.id = 'xpath-finder-copy-button';
+    copyButton.style.cssText = `
+      background: #27ae60;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 6px 12px;
+      margin-right: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s;
+      user-select: none;
+      position: relative;
+      z-index: 9999999;
+    `;
+    copyButton.addEventListener('mouseenter', () => {
+      copyButton.style.background = '#2ecc71';
+    });
+    copyButton.addEventListener('mouseleave', () => {
+      copyButton.style.background = '#27ae60';
+    });
+    
+    // Tamamen yeniden düzenlenmiş kopyalama fonksiyonu
+    const copyXPathToClipboard = (event) => {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
       
-      if (!xpathValue || xpathValue.trim() === '') {
-        console.warn("Kopyalanacak XPath değeri bulunamadı");
-        showNotification("Kopyalanacak XPath bulunamadı!");
+      console.log("Kopyala butonu tıklandı");
+      
+      // Görsel geri bildirim
+      copyButton.style.background = '#219a52';
+      copyButton.style.boxShadow = 'inset 0 0 5px rgba(0,0,0,0.5)';
+      
+      try {
+        const input = document.getElementById('xpath-finder-input');
+        const xpathValue = input.value;
+        
+        if (!xpathValue || xpathValue.trim() === '') {
+          console.warn("Kopyalanacak XPath değeri bulunamadı");
+          showNotification("Kopyalanacak XPath bulunamadı!");
+          setTimeout(() => {
+            copyButton.style.background = '#27ae60';
+            copyButton.style.boxShadow = 'none';
+          }, 300);
+          return;
+        }
+        
+        // Modern clipboard API kullan
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(xpathValue)
+            .then(() => {
+              console.log("XPath başarıyla kopyalandı (modern yöntem):", xpathValue);
+              showNotification('XPath kopyalandı!');
+              setTimeout(() => {
+                copyButton.style.background = '#27ae60';
+                copyButton.style.boxShadow = 'none';
+              }, 300);
+            })
+            .catch(err => {
+              console.error("Clipboard API hatası:", err);
+              // Hata durumunda eski yöntemi dene
+              fallbackCopy(input);
+            });
+        } else {
+          // Eski yöntem
+          fallbackCopy(input);
+        }
+      } catch (error) {
+        console.error("Kopyalama işleminde hata:", error);
+        showNotification("Kopyalama başarısız!");
         setTimeout(() => {
           copyButton.style.background = '#27ae60';
           copyButton.style.boxShadow = 'none';
         }, 300);
-        return;
       }
-      
-      // Modern clipboard API kullan
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(xpathValue)
-          .then(() => {
-            console.log("XPath başarıyla kopyalandı (modern yöntem):", xpathValue);
-            showNotification('XPath kopyalandı!');
-            setTimeout(() => {
-              copyButton.style.background = '#27ae60';
-              copyButton.style.boxShadow = 'none';
-            }, 300);
-          })
-          .catch(err => {
-            console.error("Clipboard API hatası:", err);
-            // Hata durumunda eski yöntemi dene
-            fallbackCopy(input);
-          });
-      } else {
-        // Eski yöntem
-        fallbackCopy(input);
-      }
-    } catch (error) {
-      console.error("Kopyalama işleminde hata:", error);
-      showNotification("Kopyalama başarısız!");
-      setTimeout(() => {
-        copyButton.style.background = '#27ae60';
-        copyButton.style.boxShadow = 'none';
-      }, 300);
-    }
-  };
-  
-  // Eski kopyalama yöntemi (yedek)
-  function fallbackCopy(input) {
-    try {
-      input.select();
-      const success = document.execCommand('copy');
-      if (success) {
-        console.log("XPath başarıyla kopyalandı (eski yöntem)");
-        showNotification('XPath kopyalandı!');
-      } else {
-        console.warn("execCommand kopyalama başarısız");
+    };
+    
+    // Eski kopyalama yöntemi (yedek)
+    function fallbackCopy(input) {
+      try {
+        input.select();
+        const success = document.execCommand('copy');
+        if (success) {
+          console.log("XPath başarıyla kopyalandı (eski yöntem)");
+          showNotification('XPath kopyalandı!');
+        } else {
+          console.warn("execCommand kopyalama başarısız");
+          showNotification("Kopyalama başarısız, lütfen manuel kopyalayın!");
+        }
+        
+        setTimeout(() => {
+          copyButton.style.background = '#27ae60';
+          copyButton.style.boxShadow = 'none';
+        }, 300);
+        
+      } catch (err) {
+        console.error("Fallback kopyalama hatası:", err);
         showNotification("Kopyalama başarısız, lütfen manuel kopyalayın!");
-      }
-      
-      setTimeout(() => {
-        copyButton.style.background = '#27ae60';
-        copyButton.style.boxShadow = 'none';
-      }, 300);
-      
-    } catch (err) {
-      console.error("Fallback kopyalama hatası:", err);
-      showNotification("Kopyalama başarısız, lütfen manuel kopyalayın!");
-      
-      setTimeout(() => {
-        copyButton.style.background = '#27ae60';
-        copyButton.style.boxShadow = 'none';
-      }, 300);
-    }
-  }
-  
-  // Birden fazla olay dinleyicisi ekle (daha güvenilir olması için)
-  copyButton.addEventListener('click', copyXPathToClipboard);
-  copyButton.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    copyButton.style.background = '#219a52';
-    copyButton.style.boxShadow = 'inset 0 0 5px rgba(0,0,0,0.5)';
-  });
-  
-  finderBar.appendChild(copyButton);
-  
-  // Kapatma butonu - tamamen yeniden düzenlenmiş
-  const closeButton = document.createElement('button');
-  closeButton.textContent = 'Kapat';
-  closeButton.id = 'xpath-finder-close-button';
-  closeButton.style.cssText = `
-    background: #e74c3c;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 6px 12px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background 0.2s;
-    user-select: none;
-    position: relative;
-    z-index: 9999999;
-  `;
-  closeButton.addEventListener('mouseenter', () => {
-    closeButton.style.background = '#c0392b';
-  });
-  closeButton.addEventListener('mouseleave', () => {
-    closeButton.style.background = '#e74c3c';
-  });
-  
-  // Kapatma fonksiyonu - yeniden düzenlenmiş
-  const handleCloseFinder = function(event) {
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-    
-    console.log("Kapat butonu tıklandı");
-    
-    // Görsel geri bildirim
-    closeButton.style.background = '#95281e';
-    closeButton.style.boxShadow = 'inset 0 0 5px rgba(0,0,0,0.5)';
-    
-    try {
-      // Tüm event listener'ları kaldır
-      document.removeEventListener('click', handleElementClick, true);
-      document.removeEventListener('mouseover', handleElementMouseOver);
-      document.removeEventListener('mouseout', handleElementMouseOut);
-      document.removeEventListener('keydown', handleKeyDown);
-      
-      // Highlight edilen elementleri temizle
-      const highlighted = document.querySelectorAll('.xpath-hover-highlight');
-      highlighted.forEach(el => el.classList.remove('xpath-hover-highlight'));
-      
-      // Aktif elementi temizle
-      activeElement = null;
-      
-      // Finder bar'ı kaldır
-      if (finderBar) {
-        if (document.body.contains(finderBar)) {
-          setTimeout(() => {
-            try {
-              document.body.removeChild(finderBar);
-              console.log("Finder bar başarıyla kaldırıldı");
-            } catch (error) {
-              console.error("Finder bar kaldırma hatası:", error);
-            }
-            finderBar = null;
-          }, 100);
-        }
-      }
-      
-      // Finder'ı deaktif et
-      finderActive = false;
-      
-      // Kapatıldı bilgisi gönder
-      try {
-        chrome.runtime.sendMessage({
-          action: "xpathFinderClosed"
-        }, response => {
-          console.log("XPath Finder kapatıldı bilgisi gönderildi:", response || "yanıt yok");
-        });
-      } catch (error) {
-        console.error("Kapatıldı mesajı gönderme hatası:", error);
-      }
-      
-      // Kapatıldı bildirimi göster
-      showNotification("XPath Finder kapatıldı");
-      console.log("XPath Finder başarıyla kapatıldı");
-      
-    } catch (error) {
-      console.error("Kapatma işleminde hata:", error);
-      
-      // Hata olsa bile zorla kapat
-      try {
-        if (finderBar && document.body.contains(finderBar)) {
-          document.body.removeChild(finderBar);
-        }
-        finderBar = null;
-        finderActive = false;
-        showNotification("XPath Finder zorla kapatıldı");
-      } catch (e) {
-        console.error("Zorla kapatma işleminde de hata:", e);
+        
+        setTimeout(() => {
+          copyButton.style.background = '#27ae60';
+          copyButton.style.boxShadow = 'none';
+        }, 300);
       }
     }
-  };
-  
-  // Birden fazla olay dinleyicisi ekle (daha güvenilir olması için)
-  closeButton.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeButton.style.background = '#95281e';
-    closeButton.style.boxShadow = 'inset 0 0 5px rgba(0,0,0,0.5)';
-  });
-  
-  closeButton.addEventListener('click', handleCloseFinder);
-  
-  finderBar.appendChild(closeButton);
-  
-  // ESC tuşu dinleyicisi ve tüm çubuğu kapatmaya ayarla
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && finderActive) {
-      handleCloseFinder();
-    }
-  });
-  
-  // Bar'ı sayfaya ekle
-  document.body.appendChild(finderBar);
-  
-  // Sayfada çalışabilmesi için CSS ekle
-  const style = document.createElement('style');
-  style.textContent = `
-    .xpath-hover-highlight {
-      outline: 2px solid #e67e22 !important;
-      background-color: rgba(230, 126, 34, 0.1) !important;
-    }
     
-    .xpath-notification {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: rgba(0, 0, 0, 0.8);
+    // Birden fazla olay dinleyicisi ekle (daha güvenilir olması için)
+    copyButton.addEventListener('click', copyXPathToClipboard);
+    copyButton.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      copyButton.style.background = '#219a52';
+      copyButton.style.boxShadow = 'inset 0 0 5px rgba(0,0,0,0.5)';
+    });
+    
+    finderBar.appendChild(copyButton);
+    
+    // Kapatma butonu - tamamen yeniden düzenlenmiş
+    const closeButton = document.createElement('button');
+    closeButton.textContent = 'Kapat';
+    closeButton.id = 'xpath-finder-close-button';
+    closeButton.style.cssText = `
+      background: #e74c3c;
       color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-family: Arial, sans-serif;
-      font-size: 14px;
-      z-index: 999999;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      animation: fadeInOut 3s forwards;
+      border: none;
+      border-radius: 4px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s;
+      user-select: none;
+      position: relative;
+      z-index: 9999999;
+    `;
+    closeButton.addEventListener('mouseenter', () => {
+      closeButton.style.background = '#c0392b';
+    });
+    closeButton.addEventListener('mouseleave', () => {
+      closeButton.style.background = '#e74c3c';
+    });
+    
+    // Kapatma fonksiyonu - yeniden düzenlenmiş
+    const handleCloseFinder = function(event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      
+      console.log("Kapat butonu tıklandı");
+      
+      // Görsel geri bildirim
+      closeButton.style.background = '#95281e';
+      closeButton.style.boxShadow = 'inset 0 0 5px rgba(0,0,0,0.5)';
+      
+      try {
+        // Tüm event listener'ları kaldır
+        document.removeEventListener('click', handleElementClick, true);
+        document.removeEventListener('mouseover', handleElementMouseOver);
+        document.removeEventListener('mouseout', handleElementMouseOut);
+        document.removeEventListener('keydown', handleKeyDown);
+        
+        // Highlight edilen elementleri temizle
+        const highlighted = document.querySelectorAll('.xpath-hover-highlight');
+        highlighted.forEach(el => el.classList.remove('xpath-hover-highlight'));
+        
+        // Aktif elementi temizle
+        activeElement = null;
+        
+        // Finder bar'ı kaldır
+        if (finderBar) {
+          if (document.body.contains(finderBar)) {
+            setTimeout(() => {
+              try {
+                document.body.removeChild(finderBar);
+                console.log("Finder bar başarıyla kaldırıldı");
+              } catch (error) {
+                console.error("Finder bar kaldırma hatası:", error);
+              }
+              finderBar = null;
+            }, 100);
+          }
+        }
+        
+        // Finder'ı deaktif et
+        finderActive = false;
+        
+        // Kapatıldı bilgisi gönder
+        try {
+          chrome.runtime.sendMessage({
+            action: "xpathFinderClosed"
+          }, response => {
+            console.log("XPath Finder kapatıldı bilgisi gönderildi:", response || "yanıt yok");
+          });
+        } catch (error) {
+          console.error("Kapatıldı mesajı gönderme hatası:", error);
+        }
+        
+        // Kapatıldı bildirimi göster
+        showNotification("XPath Finder kapatıldı");
+        console.log("XPath Finder başarıyla kapatıldı");
+        
+      } catch (error) {
+        console.error("Kapatma işleminde hata:", error);
+        
+        // Hata olsa bile zorla kapat
+        try {
+          if (finderBar && document.body.contains(finderBar)) {
+            document.body.removeChild(finderBar);
+          }
+          finderBar = null;
+          finderActive = false;
+          showNotification("XPath Finder zorla kapatıldı");
+        } catch (e) {
+          console.error("Zorla kapatma işleminde de hata:", e);
+        }
+      }
+    };
+    
+    // Birden fazla olay dinleyicisi ekle (daha güvenilir olması için)
+    closeButton.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeButton.style.background = '#95281e';
+      closeButton.style.boxShadow = 'inset 0 0 5px rgba(0,0,0,0.5)';
+    });
+    
+    closeButton.addEventListener('click', handleCloseFinder);
+    
+    finderBar.appendChild(closeButton);
+    
+    // ESC tuşu dinleyicisi ve tüm çubuğu kapatmaya ayarla
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && finderActive) {
+        handleCloseFinder();
+      }
+    });
+    
+    // Bar'ı sayfaya ekle
+    if (document.body) {
+      document.body.appendChild(finderBar);
+      console.log("XPath Finder bar başarıyla DOM'a eklendi");
+    } else {
+      throw new Error("Document body henüz mevcut değil!");
     }
     
-    @keyframes fadeInOut {
-      0% { opacity: 0; transform: translateY(20px); }
-      10% { opacity: 1; transform: translateY(0); }
-      80% { opacity: 1; }
-      100% { opacity: 0; }
+    // Sayfada çalışabilmesi için CSS ekle
+    try {
+      const style = document.createElement('style');
+      style.textContent = `
+        .xpath-hover-highlight {
+          outline: 2px solid #e67e22 !important;
+          background-color: rgba(230, 126, 34, 0.1) !important;
+        }
+        
+        .xpath-notification {
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          background: rgba(0, 0, 0, 0.8);
+          color: white;
+          padding: 12px 20px;
+          border-radius: 8px;
+          font-family: Arial, sans-serif;
+          font-size: 14px;
+          z-index: 999999;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+          animation: fadeInOut 3s forwards;
+        }
+        
+        @keyframes fadeInOut {
+          0% { opacity: 0; transform: translateY(20px); }
+          10% { opacity: 1; transform: translateY(0); }
+          80% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        
+        #xpath-finder-copy-button, #xpath-finder-close-button {
+          position: relative !important;
+          z-index: 9999999 !important;
+        }
+      `;
+      document.head.appendChild(style);
+      console.log("XPath Finder stil başarıyla eklendi");
+    } catch (styleError) {
+      console.error("Stil ekleme hatası:", styleError);
+      // Stil eklenemese bile devam et
     }
-    
-    #xpath-finder-copy-button, #xpath-finder-close-button {
-      position: relative !important;
-      z-index: 9999999 !important;
-    }
-  `;
-  document.head.appendChild(style);
+  } catch (error) {
+    console.error("XPath Finder bar oluşturma hatası:", error);
+    throw error; // Hatayı üst fonksiyona ilet
+  }
 }
 
 // XPath Finder'ı aktifleştirme fonksiyonu
 function activateXPathFinder() {
-  if (finderActive) return;
+  if (finderActive) {
+    console.log("XPath Finder zaten aktif, tekrar aktivasyon gerekmiyor");
+    return true;
+  }
   
-  finderActive = true;
-  console.log("XPath Finder aktifleştirildi");
-  
-  // XPath Finder bar oluştur
-  createFinderBar();
-  
-  // Eleman seçimi için event listener ekle
-  document.addEventListener('mouseover', handleElementMouseOver);
-  document.addEventListener('mouseout', handleElementMouseOut);
-  document.addEventListener('click', handleElementClick, true);
-  document.addEventListener('keydown', handleKeyDown);
-  
-  // Bildirim göster
-  showNotification("XPath Finder aktif. Bir öğe seçmek için tıklayın.");
+  try {
+    // Sayfa hazır mı kontrol et
+    if (document.readyState !== 'complete') {
+      console.warn("Sayfa tam olarak yüklenmedi, yüklenme tamamlandığında XPath Finder aktifleştirilecek");
+      
+      // Sayfa yüklenene kadar bekle
+      window.addEventListener('load', function onLoad() {
+        window.removeEventListener('load', onLoad);
+        console.log("Sayfa yüklendi, XPath Finder şimdi aktifleştiriliyor");
+        activateXPathFinder();
+      });
+      
+      return true; // Yine de başarılı olarak kabul et, yükleme sonrası tetiklenecek
+    }
+    
+    finderActive = true;
+    console.log("XPath Finder aktifleştirildi");
+    
+    // XPath Finder bar oluştur
+    try {
+      createFinderBar();
+      console.log("XPath Finder bar başarıyla oluşturuldu");
+    } catch (barError) {
+      console.error("XPath Finder bar oluşturma hatası:", barError);
+      
+      // Bar oluşturulmasa bile devam etmeyi dene
+      setTimeout(() => {
+        try {
+          createFinderBar();
+          console.log("İkinci deneme: XPath Finder bar başarıyla oluşturuldu");
+        } catch (retryError) {
+          console.error("Bar oluşturma tekrar başarısız:", retryError);
+        }
+      }, 500);
+    }
+    
+    // Eleman seçimi için event listener ekle
+    document.addEventListener('mouseover', handleElementMouseOver);
+    document.addEventListener('mouseout', handleElementMouseOut);
+    document.addEventListener('click', handleElementClick, true);
+    document.addEventListener('keydown', handleKeyDown);
+    
+    // Bildirim göster
+    try {
+      showNotification("XPath Finder aktif. Bir öğe seçmek için tıklayın.");
+    } catch (noteError) {
+      console.warn("Bildirim gösterme hatası:", noteError);
+      // Bildirim gösterilemese bile bu kritik değil, devam et
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("XPath Finder aktivasyon hatası:", error);
+    
+    // Hata durumunda temizlik yap
+    try {
+      forceCloseXPathFinder();
+    } catch (cleanupError) {
+      console.error("Hata sonrası temizleme başarısız:", cleanupError);
+    }
+    
+    return false;
+  }
 }
 
 // Zorla kapatma fonksiyonu (acil durum için)
@@ -672,17 +798,43 @@ function handleKeyDown(event) {
 
 // Bildirim gösterme fonksiyonu
 function showNotification(message) {
-  const notification = document.createElement('div');
-  notification.className = 'xpath-notification';
-  notification.textContent = message;
-  document.body.appendChild(notification);
-  
-  // 3 saniye sonra kaldır
-  setTimeout(() => {
-    if (notification.parentNode) {
-      notification.parentNode.removeChild(notification);
+  try {
+    // Önceki bildirimleri kaldır
+    const existingNotifications = document.querySelectorAll('.xpath-notification');
+    existingNotifications.forEach(notification => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    });
+    
+    // Yeni bildirim oluştur
+    const notification = document.createElement('div');
+    notification.className = 'xpath-notification';
+    notification.textContent = message || 'XPath Finder bildirim';
+    
+    // DOM'a ekle
+    if (document.body) {
+      document.body.appendChild(notification);
+      
+      // Belirli süre sonra kaldır
+      setTimeout(() => {
+        if (notification.parentNode) {
+          try {
+            notification.parentNode.removeChild(notification);
+          } catch (e) {
+            console.warn("Bildirim kaldırma hatası:", e);
+            // Kaldırma başarısız oldu, görünmez yap
+            notification.style.display = 'none';
+          }
+        }
+      }, 3000);
+    } else {
+      console.warn("document.body olmadığı için bildirim gösterilemiyor");
     }
-  }, 3000);
+  } catch (error) {
+    console.error("Bildirim gösterme hatası:", error);
+    // Hata durumunda sadece konsola bilgi ver, kritik değil
+  }
 }
 
 // Message listeneri (en üstte tanımlı olması daha iyi)
@@ -710,38 +862,41 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         sendResponse({ success: true, message: "XPath Finder zaten aktif" });
       } else {
         console.log("XPath Finder aktifleştiriliyor...");
-        activateXPathFinder();
-        sendResponse({ success: true, message: "XPath Finder aktifleştirildi" });
+        const result = activateXPathFinder();
+        
+        if (result) {
+          sendResponse({ success: true, message: "XPath Finder aktifleştirildi" });
+        } else {
+          sendResponse({ success: false, message: "XPath Finder aktifleştirilemedi" });
+        }
       }
     } catch (error) {
-      console.error("XPath Finder aktifleştirme hatası:", error);
-      sendResponse({ success: false, error: error.message });
+      console.error("XPath Finder aktivasyon hatası:", error);
+      sendResponse({ 
+        success: false, 
+        message: "XPath Finder aktivasyon hatası: " + error.message,
+        error: error.message
+      });
     }
     
-    return true; // Asenkron mesaj işleme için true döndür
+    return true; // Asenkron yanıt için true döndür
   }
   
-  return true; // Tüm mesajlar için true döndür
+  return true; // Varsayılan olarak true döndür
 });
 
 // Sayfa yüklendiğinde veya DOM içeriği yüklendiğinde XPath Finder'ın hazır olduğunu bildir
 if (document.readyState === 'complete') {
   console.log("XPath Finder hazır (sayfa tamamen yüklendi)");
-  chrome.runtime.sendMessage({ action: "xpathFinderReady" }, response => {
-    console.log("XPath Finder hazır olduğu bildirildi, yanıt:", response || "yanıt yok");
-  });
+  notifyReady();
 } else {
   window.addEventListener('load', function() {
     console.log("XPath Finder hazır (window.load olayı)");
-    chrome.runtime.sendMessage({ action: "xpathFinderReady" }, response => {
-      console.log("XPath Finder hazır olduğu bildirildi, yanıt:", response || "yanıt yok");
-    });
+    notifyReady();
   });
   
   document.addEventListener('DOMContentLoaded', function() {
     console.log("XPath Finder hazır (DOMContentLoaded olayı)");
-    chrome.runtime.sendMessage({ action: "xpathFinderReady" }, response => {
-      console.log("XPath Finder hazır olduğu bildirildi, yanıt:", response || "yanıt yok");
-    });
+    notifyReady();
   });
 }

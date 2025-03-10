@@ -86,6 +86,118 @@
       border-color: #0197AF;
       box-shadow: 0 2px 4px rgba(0,123,255,0.2);
     }
+    
+    .percentage-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px;
+      background: rgba(2, 21, 61, 0.7);
+      border-radius: 8px;
+      border: 1px solid #4B227A;
+      margin-bottom: 12px;
+    }
+
+    .percentage-radio-group {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 0;
+      padding: 0;
+    }
+    
+    .discount-options {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .radio-container-discount {
+      position: relative;
+    }
+    
+    .radio-container-discount input[type="radio"] {
+      display: none;
+    }
+    
+    .radio-container-discount label {
+      padding: 4px 8px;
+      border-radius: 14px;
+      background-color: #02153D;
+      border: 1px solid #4B227A;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin: 0;
+      font-size: 0.75rem;
+      color: #fff;
+      display: inline-block;
+      text-align: center;
+      min-width: 36px;
+    }
+    
+    .radio-container-discount input[type="radio"]:checked + label {
+      background-color: #4B227A;
+      color: #00EED0;
+      border-color: #0197AF;
+      box-shadow: 0 2px 4px rgba(0,123,255,0.2);
+    }
+
+    .percentage-row {
+      display: grid;
+      grid-template-columns: 90px 1fr auto;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 0;
+    }
+
+    .percentage-label {
+      width: auto;
+      font-size: 0.8rem;
+      color: #00EED0;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .percentage-input {
+      width: 100%;
+      height: 26px;
+      padding: 2px 6px;
+      border: 1px solid #4B227A;
+      border-radius: 4px;
+      background: rgba(2, 21, 61, 0.9);
+      color: #fff;
+      font-size: 0.75rem;
+    }
+    
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 0;
+      white-space: nowrap;
+    }
+    
+    .checkbox-container input[type="checkbox"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border: 1px solid #4B227A;
+      border-radius: 3px;
+      background: rgba(2, 21, 61, 0.7);
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .checkbox-text {
+      font-size: 0.75rem;
+    }
+
     .alert {
       margin-bottom: 10px;
       border: none;
@@ -100,41 +212,6 @@
       border: 1px solid #4B227A;
     }
     
-    .percentage-controls {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding: 12px;
-      background: rgba(2, 21, 61, 0.7);
-      border-radius: 8px;
-      border: 1px solid #4B227A;
-      margin-bottom: 12px;
-    }
-
-    .percentage-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .percentage-label {
-      width: 80px;
-      font-size: 0.8rem;
-      color: #00EED0;
-      font-weight: 500;
-    }
-
-    .percentage-input {
-      flex: 1;
-      height: 32px;
-      padding: 4px 8px;
-      border: 2px solid #4B227A;
-      border-radius: 6px;
-      background: rgba(2, 21, 61, 0.9);
-      color: #fff;
-      font-size: 0.9rem;
-    }
-
     .operation-toggle {
       width: 32px;
       height: 32px;
@@ -180,29 +257,6 @@
       margin-top: 15px;
     }
 
-    .checkbox-container {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 4px 0;
-    }
-
-    .checkbox-container input[type="checkbox"] {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 18px;
-      height: 18px;
-      border: 2px solid #4B227A;
-      border-radius: 4px;
-      background: rgba(2, 21, 61, 0.7);
-      cursor: pointer;
-      position: relative;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
     .checkbox-container input[type="checkbox"]:checked {
       background: linear-gradient(145deg, #4B227A, #0197AF);
       border-color: #00EED0;
@@ -240,24 +294,33 @@
       content: attr(data-tooltip);
       position: absolute;
       bottom: 100%;
-      left: 0;
+      left: 50%;
+      transform: translateX(-50%);
       background: #4B227A;
       color: #fff;
-      padding: 6px;
+      padding: 8px;
       border-radius: 4px;
       font-size: 0.75rem;
-      width: 200px;
+      width: auto;
+      max-width: 220px;
+      min-width: 150px;
       z-index: 100;
       margin-bottom: 8px;
       line-height: 1.4;
       border: 1px solid #0197AF;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      word-wrap: break-word;
+      white-space: normal;
+      hyphens: auto;
     }
 
     [data-tooltip]:hover:before {
       content: '';
       position: absolute;
       bottom: 100%;
-      left: 15px;
+      left: 50%;
+      transform: translateX(-50%);
       border: 6px solid transparent;
       border-top: 6px solid #4B227A;
       margin-bottom: 4px;
@@ -749,226 +812,334 @@
       outline: none;
       box-shadow: 0 0 0 3px rgba(1, 151, 175, 0.3);
     }
+
+    /* Kimlik doğrulama ekranı için stiller */
+    #auth-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #02153D;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    
+    #auth-form {
+      width: 100%;
+      max-width: 300px;
+      background-color: #02153D;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(1, 151, 175, 0.4);
+      border: 1px solid #4B227A;
+      text-align: center;
+    }
+    
+    #auth-form h2 {
+      color: #00EED0;
+      margin-bottom: 20px;
+      font-size: 1.2rem;
+    }
+    
+    #auth-form input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 2px solid #4B227A;
+      border-radius: 6px;
+      background: rgba(2, 21, 61, 0.9);
+      color: #fff;
+      font-size: 0.9rem;
+    }
+    
+    #auth-form button {
+      width: 100%;
+      padding: 10px;
+      background: linear-gradient(145deg, #4B227A, #0197AF);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+    
+    #auth-form button:hover {
+      background: linear-gradient(145deg, #5C33A0, #01A8C0);
+      box-shadow: 0 0 10px rgba(0, 238, 208, 0.5);
+    }
+    
+    #auth-error {
+      color: #ff5252;
+      margin-top: 10px;
+      font-size: 0.85rem;
+      display: none;
+    }
+
+    .bottom-checkbox {
+      margin-top: 8px;
+    }
+
+    .apply-checkbox {
+      display: flex;
+      align-items: center;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .apply-checkbox .checkbox-text {
+      margin-left: 2px;
+    }
   </style>
 </head>
 <body>
-  <div class="container-fluid p-2">
-    <!-- Refresh Button -->
-    <button id="refreshSelectors" class="refresh-button" title="Seçicileri Yenile">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
-      </svg>
-    </button>
-
-    <!-- Settings Button -->
-    <button id="settingsButton" class="settings-button" title="Ayarlar">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
-        <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/>
-      </svg>
-    </button>
-
-    <!-- Add Button -->
-    <button id="addItem" class="add-button" title="Yeni Ekle">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-      </svg>
-    </button>
-
-    <!-- Domain Display Card -->
-    <div class="domain-card animate__animated animate__fadeIn">
-      <span id="currentDomain" class="domain-text"></span>
-    </div>
-
-    <!-- Exchange Rate Display -->
-    <div class="rate-container">
-      <div class="rate-item">
-        <span>Dolar</span>
-        <span class="rate-value" id="usdRate">-</span>
-      </div>
-      <div class="divider"></div>
-      <div class="rate-item">
-        <span>Euro</span>
-        <span class="rate-value" id="euroRate">-</span>
-      </div>
-      <div class="divider"></div>
-      <div class="rate-item">
-        <span>EUR/USD</span>
-        <span class="rate-value" id="eurUsdRate">-</span>
-      </div>
-      <div class="divider"></div>
-      <div class="rate-item">
-        <span>Yuan</span>
-        <span class="rate-value" id="cnyRate">-</span>
-      </div>
-    </div>
-    
-    <div class="currency-converter">
-      <div class="radio-group">
-        <div class="radio-container">
-          <input type="radio" id="tl-to-usd" name="conversion" value="usd" checked>
-          <label for="tl-to-usd">TL → USD</label>
-        </div>
-        <div class="radio-container">
-          <input type="radio" id="tl-to-eur" name="conversion" value="eur">
-          <label for="tl-to-eur">TL → EUR</label>
-        </div>
-        <div class="radio-container">
-          <input type="radio" id="tl-to-cny" name="conversion" value="cny">
-          <label for="tl-to-cny">TL → CNY</label>
-        </div>
-      </div>
-    </div>
-    
-    <div class="cost-inputs">
-      <div class="percentage-controls">
-        <div class="percentage-row">
-          <span class="percentage-label">FM</span>
-          <input type="number" id="finance-cost" class="percentage-input" min="0" max="100" step="0.01" placeholder="Örn: 3">
-          <div class="operation-toggle" id="finance-operation-indicator">-</div>
-        </div>
-        
-        <div class="percentage-row">
-          <span class="percentage-label">RMA/Yol</span>
-          <input type="number" id="shipping-cost" class="percentage-input" min="0" max="100" step="0.01" placeholder="Önce finans maliyetini girin" disabled>
-          <div class="operation-toggle" id="shipping-operation-indicator">-</div>
-        </div>
-
-        <div class="kosatec-only" style="display: none;">
-          <label class="checkbox-container" data-tooltip="İşaretlendiğinde yüzdeleri ekler, işaretlenmediğinde çıkarır">
-            <input type="checkbox" id="percentage-operation">
-            <span class="checkbox-text">Yüzdeleri Ekle</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="checkbox-group">
-        <div class="discount-container" style="display: flex; align-items: center; gap: 10px;">
-          <label class="checkbox-container" data-tooltip="Birim olarak indirim uygular. Miktar girilmezse 150 varsayılan olarak uygulanır">
-            <input type="checkbox" id="extra-cost">
-            <span class="checkbox-text">Ek Maliyet</span>
-          </label>
-          <input 
-            type="number" 
-            id="discount-amount" 
-            class="form-control form-control-sm" 
-            style="width: 80px; height: 25px;" 
-            placeholder="150"
-            min="0"
-          >
-          <span style="font-size: 0.9rem; color: #495057;">Birim</span>
-        </div>
-
-        <label class="checkbox-container mt-2" data-tooltip="KDV'yi düşürerek hesaplama yapar (%20)">
-          <input type="checkbox" id="kdv-discount">
-          <span class="checkbox-text">KDV'yi Düşürt</span>
-        </label>
-      </div>
+  <!-- Kimlik Doğrulama Ekranı -->
+  <div id="auth-screen">
+    <div id="auth-form">
+      <h2>Price Calculator</h2>
+      <input type="password" id="auth-code" placeholder="Lütfen erişim kodunu giriniz">
+      <button id="auth-submit">Giriş Yap</button>
+      <div id="auth-error">Yanlış erişim kodu. Lütfen tekrar deneyin.</div>
     </div>
   </div>
-  
-  <!-- Ekleme Modalı -->
-  <div id="addModal" class="add-modal">
-    <div class="add-modal-content">
-      <div class="add-modal-header">
-        <h3>XPath Ekle</h3>
-        <span class="close-modal">&times;</span>
+
+  <!-- Ana İçerik -->
+  <div id="main-content" style="display: none;">
+    <div class="container-fluid p-2">
+      <!-- Refresh Button -->
+      <button id="refreshSelectors" class="refresh-button" title="Seçicileri Yenile">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+          <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+        </svg>
+      </button>
+
+      <!-- Settings Button -->
+      <button id="settingsButton" class="settings-button" title="Ayarlar">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
+          <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/>
+        </svg>
+      </button>
+
+      <!-- Add Button -->
+      <button id="addItem" class="add-button" title="Yeni Ekle">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+        </svg>
+      </button>
+
+      <!-- Domain Display Card -->
+      <div class="domain-card animate__animated animate__fadeIn">
+        <span id="currentDomain" class="domain-text"></span>
       </div>
-      <div class="add-modal-body">
-        <!-- Domain Gösterimi -->
-        <div class="modal-domain-display">
-          <span class="modal-label">Aktif Domain:</span>
-          <span id="modalDomainName" class="modal-domain-name"></span>
+
+      <!-- Exchange Rate Display -->
+      <div class="rate-container">
+        <div class="rate-item">
+          <span>Dolar</span>
+          <span class="rate-value" id="usdRate">-</span>
         </div>
-        
-        <!-- XPath Input -->
-        <div class="xpath-input-group">
-          <input type="text" id="xpathInput" class="xpath-input" placeholder="XPath ifadesi girin...">
-          <button id="addXPathBtn" class="add-xpath-btn" title="Ekle">+</button>
+        <div class="divider"></div>
+        <div class="rate-item">
+          <span>Euro</span>
+          <span class="rate-value" id="euroRate">-</span>
         </div>
-        
-        <!-- Para Birimi Seçimi -->
-        <div class="currency-select-group">
-          <span class="modal-label">Para Birimi:</span>
-          <select id="currencySelect" class="currency-select">
-            <option value="TL">TL</option>
-            <option value="USD">Dolar</option>
-            <option value="EUR">Euro</option>
-          </select>
+        <div class="divider"></div>
+        <div class="rate-item">
+          <span>EUR/USD</span>
+          <span class="rate-value" id="eurUsdRate">-</span>
         </div>
-      </div>
-    </div>
-  </div>
-  
-  <script src="utils/priceDisplay.js"></script>
-  <script src="utils/currency.js"></script>
-  <script src="utils/htmlRenderer.js"></script>
-  <script src="utils/observer.js"></script>
-  <script src="popup.js"></script>
-  
-  <!-- Ayarlar Modal -->
-  <div id="settings-modal" style="
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
-  ">
-    <div class="settings-modal-content" style="
-      background: linear-gradient(to bottom, #02153D, #0a1f4d);
-      border-radius: 8px;
-      width: 90%;
-      max-width: 350px;
-      padding: 15px;
-      box-shadow: 0 4px 16px rgba(0, 238, 208, 0.3);
-      border: 1px solid #4B227A;
-      color: white;
-      overflow: hidden;
-    ">
-      <div style="
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #4B227A;
-        padding-bottom: 10px;
-        margin-bottom: 15px;
-      ">
-        <h3 style="
-          margin: 0;
-          font-size: 16px;
-          color: #00EED0;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        ">
-          <span style="font-size: 18px;">⚙️</span> Kayıtlı Domainler
-        </h3>
-        <span class="close-modal" id="close-settings-modal" style="
-          font-size: 24px;
-          cursor: pointer;
-          color: #666;
-          transition: color 0.2s ease;
-        ">&times;</span>
+        <div class="divider"></div>
+        <div class="rate-item">
+          <span>Yuan</span>
+          <span class="rate-value" id="cnyRate">-</span>
+        </div>
       </div>
       
-      <div id="saved-domains-container" style="
-        max-height: 300px;
-        overflow-y: auto;
-        margin-bottom: 15px;
+      <div class="currency-converter">
+        <div class="radio-group">
+          <div class="radio-container">
+            <input type="radio" id="tl-to-usd" name="conversion" value="usd" checked>
+            <label for="tl-to-usd">TL → USD</label>
+          </div>
+          <div class="radio-container">
+            <input type="radio" id="tl-to-eur" name="conversion" value="eur">
+            <label for="tl-to-eur">TL → EUR</label>
+          </div>
+          <div class="radio-container">
+            <input type="radio" id="tl-to-cny" name="conversion" value="cny">
+            <label for="tl-to-cny">TL → CNY</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="cost-inputs">
+        <div class="percentage-controls">
+          <div class="percentage-radio-group">
+            <span class="percentage-label">İthalat Masraf:</span>
+            <div class="discount-options">
+              <div class="radio-container-discount">
+                <input type="radio" id="discount-5" name="discount-percentage" value="5" checked>
+                <label for="discount-5">%5</label>
+              </div>
+              <div class="radio-container-discount">
+                <input type="radio" id="discount-10" name="discount-percentage" value="10">
+                <label for="discount-10">%10</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Satış Masrafları input ve checkbox -->
+          <div class="percentage-row">
+            <span class="percentage-label">Satış Masraf:</span>
+            <input type="number" id="sales-cost" class="percentage-input" value="10" min="0" max="100">
+            <label class="checkbox-container apply-checkbox">
+              <input type="checkbox" id="sales-cost-enabled">
+              <span class="checkbox-text">Uygula</span>
+            </label>
+          </div>
+
+          <div class="bottom-checkbox">
+            <label class="checkbox-container" data-tooltip="İşaretlendiğinde yüzdeleri ekler, işaretlenmediğinde çıkarır">
+              <input type="checkbox" id="percentage-operation">
+              <span class="checkbox-text">Yüzdeleri Ekle</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="checkbox-group">
+          <div class="discount-container" style="display: flex; align-items: center; gap: 10px;">
+            <label class="checkbox-container" data-tooltip="Birim olarak indirim uygular. Miktar girilmezse 150 varsayılan olarak uygulanır">
+              <input type="checkbox" id="extra-cost">
+              <span class="checkbox-text">Ek Maliyet</span>
+            </label>
+            <input 
+              type="number" 
+              id="discount-amount" 
+              class="form-control form-control-sm" 
+              style="width: 80px; height: 25px;" 
+              placeholder="150"
+              min="0"
+            >
+            <span style="font-size: 0.9rem; color: #495057;">Birim</span>
+          </div>
+
+          <label class="checkbox-container mt-2" data-tooltip="KDV'yi düşürerek hesaplama yapar (%20)">
+            <input type="checkbox" id="kdv-discount">
+            <span class="checkbox-text">KDV'yi Düşürt</span>
+          </label>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Ekleme Modalı -->
+    <div id="addModal" class="add-modal">
+      <div class="add-modal-content">
+        <div class="add-modal-header">
+          <h3>XPath Ekle</h3>
+          <span class="close-modal">&times;</span>
+        </div>
+        <div class="add-modal-body">
+          <!-- Domain Gösterimi -->
+          <div class="modal-domain-display">
+            <span class="modal-label">Aktif Domain:</span>
+            <span id="modalDomainName" class="modal-domain-name"></span>
+          </div>
+          
+          <!-- XPath Input -->
+          <div class="xpath-input-group">
+            <input type="text" id="xpathInput" class="xpath-input" placeholder="XPath ifadesi girin...">
+            <button id="addXPathBtn" class="add-xpath-btn" title="Ekle">+</button>
+          </div>
+          
+          <!-- Para Birimi Seçimi -->
+          <div class="currency-select-group">
+            <span class="modal-label">Para Birimi:</span>
+            <select id="currencySelect" class="currency-select">
+              <option value="TL">TL</option>
+              <option value="USD">Dolar</option>
+              <option value="EUR">Euro</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <script src="utils/priceDisplay.js"></script>
+    <script src="utils/currency.js"></script>
+    <script src="utils/htmlRenderer.js"></script>
+    <script src="utils/observer.js"></script>
+    <script src="popup.js"></script>
+    
+    <!-- Ayarlar Modal -->
+    <div id="settings-modal" style="
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.7);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    ">
+      <div class="settings-modal-content" style="
+        background: linear-gradient(to bottom, #02153D, #0a1f4d);
+        border-radius: 8px;
+        width: 90%;
+        max-width: 350px;
+        padding: 15px;
+        box-shadow: 0 4px 16px rgba(0, 238, 208, 0.3);
+        border: 1px solid #4B227A;
+        color: white;
+        overflow: hidden;
       ">
-        <!-- Kayıtlı domainler dinamik olarak buraya eklenecek -->
-        <div class="no-domains" style="
-          text-align: center;
-          padding: 20px;
-          color: #999;
-          font-style: italic;
-        ">Henüz kayıtlı domain yok</div>
+        <div style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-bottom: 1px solid #4B227A;
+          padding-bottom: 10px;
+          margin-bottom: 15px;
+        ">
+          <h3 style="
+            margin: 0;
+            font-size: 16px;
+            color: #00EED0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          ">
+            <span style="font-size: 18px;">⚙️</span> Kayıtlı Domainler
+          </h3>
+          <span class="close-modal" id="close-settings-modal" style="
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.2s ease;
+          ">&times;</span>
+        </div>
+        
+        <div id="saved-domains-container" style="
+          max-height: 300px;
+          overflow-y: auto;
+          margin-bottom: 15px;
+        ">
+          <!-- Kayıtlı domainler dinamik olarak buraya eklenecek -->
+          <div class="no-domains" style="
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-style: italic;
+          ">Henüz kayıtlı domain yok</div>
+        </div>
       </div>
     </div>
   </div>

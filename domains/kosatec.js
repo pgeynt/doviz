@@ -3,7 +3,10 @@ const kosatecConfig = {
   priceSelectors: [
     "div > div > div.product-info > div.mt-2 > div > form > div > div.col-6.pe-0 > div > div > span",
     "body > main > div:nth-child(2) > div > div.product-detail > div.product-detail-content > div.row.product-detail-main > div.col-lg-5.product-detail-buy > div > div:nth-child(3) > div.product-detail-price-container > p",
-    "body > main > div:nth-child(2) > div > div.product-detail > div.product-detail-content > div.row.product-detail-main > div.col-lg-5.product-detail-buy > div > div:nth-child(4) > div.product-detail-price-container > p"
+    "body > main > div:nth-child(2) > div > div.product-detail > div.product-detail-content > div.row.product-detail-main > div.col-lg-5.product-detail-buy > div > div:nth-child(4) > div.product-detail-price-container > p",
+    "body > main > div:nth-child(2) > div > div > div > div > div > div.cms-block.pos-1.cms-block-gallery-buybox > div > div > div.col-lg-4.product-detail-buy > div > div.cms-element-buy-box > div > div:nth-child(5) > div.product-detail-price-container > p",
+    "body > main > div:nth-child(2) > div > div > div > div > div > div.cms-block.pos-1.cms-block-gallery-buybox > div > div > div.col-lg-8.product-detail-media > div.m-0.p-0.kc-detail-responsive-buy-box > div.cms-element-buy-box > div > div:nth-child(6) > div.product-detail-price-container > p",
+    "body > main > div:nth-child(2) > div > div > div > div > div > div.cms-block.pos-1.cms-block-gallery-buybox > div > div > div.col-lg-4.product-detail-buy > div > div.cms-element-buy-box > div > div:nth-child(6) > div.product-detail-price-container > p"
   ],
   excludeSelectors: [
     '.old-price',

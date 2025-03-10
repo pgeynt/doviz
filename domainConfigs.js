@@ -6,14 +6,79 @@ const domainConfigs = {
   'www.trendyol.com': window.trendyolConfig,
   'shop.kosatec.de': window.kosatecConfig,
   'www.imcopex.shop': window.imcopexConfig,
-  'www.siewert-kau.com': window.siewertKauConfig
+  'www.siewert-kau.com': window.siewertKauConfig,
+  'www.wave-distribution.de': window.waveDistributionConfig
 };
+
+// Kullanıcı tarafından eklenmiş özel konfigürasyonları sakla
+const customConfigs = {};
 
 // Domain handler
 const DomainHandler = {
+  // Kullanıcı tarafından tanımlanmış domain konfigürasyonu ekle
+  addCustomConfig(config) {
+    try {
+      if (!config || !config.name || !config.priceSelectors || !Array.isArray(config.priceSelectors)) {
+        console.error('Invalid configuration:', config);
+        return false;
+      }
+      
+      const currentDomain = window.location.hostname;
+      customConfigs[currentDomain] = config;
+      
+      console.log(`Custom config added for domain ${currentDomain}:`, config);
+      console.log('Current customConfigs:', customConfigs);
+      
+      return true;
+    } catch (error) {
+      console.error('Error adding custom config:', error);
+      return false;
+    }
+  },
+  
+  // Tüm özel konfigürasyonları temizle
+  clearCustomConfigs() {
+    try {
+      Object.keys(customConfigs).forEach(key => delete customConfigs[key]);
+      console.log('All custom configs cleared');
+      return true;
+    } catch (error) {
+      console.error('Error clearing custom configs:', error);
+      return false;
+    }
+  },
+  
+  // Kullanıcı tarafından tanımlanmış domain konfigürasyonunu bul
+  findUserDomainConfig() {
+    try {
+      const currentDomain = window.location.hostname;
+      const config = customConfigs[currentDomain];
+      
+      if (config) {
+        console.log(`Found user defined config for domain ${currentDomain}:`, config);
+      } else {
+        console.log(`No user defined config found for domain ${currentDomain}`);
+      }
+      
+      return config || null;
+    } catch (error) {
+      console.error('Error finding user domain config:', error);
+      return null;
+    }
+  },
+
   getCurrentConfig() {
     try {
       const currentDomain = window.location.hostname;
+      
+      // Öncelikle kullanıcı tanımlı konfigürasyonu kontrol et
+      const userConfig = this.findUserDomainConfig();
+      if (userConfig) {
+        console.log(`Using user defined config for ${currentDomain}`);
+        return userConfig;
+      }
+      
+      // Kullanıcı tanımlı konfig yoksa varsayılan konfigürasyonu al
       const config = domainConfigs[currentDomain] || null;
       
       if (!config) {
@@ -42,7 +107,9 @@ const DomainHandler = {
       if (!domain) {
         return false;
       }
-      return !!domainConfigs[domain];
+      
+      // Özel konfigürasyonlarda ve varsayılan konfigürasyonlarda ara
+      return !!customConfigs[domain] || !!domainConfigs[domain];
     } catch (error) {
       console.error('Error checking if domain is supported:', error);
       return false;
@@ -51,7 +118,12 @@ const DomainHandler = {
 
   getSupportedDomains() {
     try {
-      return Object.keys(domainConfigs);
+      // Varsayılan domainleri ve özel domainleri birleştir
+      const defaultDomains = Object.keys(domainConfigs);
+      const customDomains = Object.keys(customConfigs);
+      
+      // Tekrar eden domainleri filtrele
+      return [...new Set([...defaultDomains, ...customDomains])];
     } catch (error) {
       console.error('Error getting supported domains:', error);
       return [];
@@ -64,7 +136,13 @@ const DomainHandler = {
       const currentConfig = this.getCurrentConfig();
       if (!currentConfig) return false;
       
-      const euroBasedSites = ['Kosatec', 'Imcopex', 'Siewert-Kau'];
+      // Önce özel konfigürasyonu kontrol et
+      if (currentConfig.isUserDefined) {
+        return currentConfig.type === 'euro';
+      }
+      
+      // Sonra varsayılan Euro bazlı siteleri kontrol et
+      const euroBasedSites = ['Kosatec', 'Imcopex', 'Siewert-Kau', 'Wave Distribution'];
       return euroBasedSites.includes(currentConfig.name);
     } catch (error) {
       console.error('Error checking if site is Euro based:', error);
@@ -92,6 +170,45 @@ const DomainHandler = {
         convert: function(p) { return { convertedPrice: p, currencySymbol: '?', workingPrice: p, baseCurrency: '?' }; },
         calculateFinance: function() { return ''; }
       };
+    }
+  },
+  
+  // Özel fiyat selektörleri al
+  getPriceSelectors() {
+    try {
+      const currentConfig = this.getCurrentConfig();
+      if (!currentConfig || !currentConfig.priceSelectors) {
+        return [];
+      }
+      
+      return currentConfig.priceSelectors;
+    } catch (error) {
+      console.error('Error getting price selectors:', error);
+      return [];
+    }
+  },
+  
+  // XPath kullanılacak mı kontrol et
+  shouldUseXPath() {
+    try {
+      const currentConfig = this.getCurrentConfig();
+      return currentConfig ? !!currentConfig.useXPath : false;
+    } catch (error) {
+      console.error('Error checking if should use XPath:', error);
+      return false;
+    }
+  },
+  
+  // Para birimi tipini al
+  getCurrencyType() {
+    try {
+      if (this.isEuroBased()) {
+        return 'euro';
+      }
+      return 'try';
+    } catch (error) {
+      console.error('Error getting currency type:', error);
+      return 'try'; // Varsayılan olarak TL
     }
   }
 };

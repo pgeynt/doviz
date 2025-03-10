@@ -63,7 +63,9 @@ const hepsiburadaProcessor = {
             shippingCost: settings.shippingCost || 0,
             extraCost: settings.extraCost || false,
             kdvAction: settings.kdvAction || 'none',
-            discountAmount: settings.discountAmount || 0
+            discountAmount: settings.discountAmount || 0,
+            salesCost: settings.salesCost || 10,
+            salesCostEnabled: settings.salesCostEnabled === true
           };
 
           // Dönüştürücü al ve fiyat dönüşümü
@@ -91,7 +93,7 @@ const hepsiburadaProcessor = {
             settings.euroPercentageOperation : 
             settings.tlPercentageOperation;
             
-          html += converter.calculateFinance(
+          html += window.createFinanceAndRmaHTML(
             convertedPrice, 
             config, 
             currencySymbol, 

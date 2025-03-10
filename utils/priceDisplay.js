@@ -128,7 +128,9 @@ function checkAndConvertPrices() {
       'kdvAction',
       'discountAmount',
       'euroPercentageOperation',  
-      'tlPercentageOperation'     
+      'tlPercentageOperation',
+      'salesCost',
+      'salesCostEnabled'
     ], function(result) {
       if (chrome.runtime.lastError) {
         console.error('Error getting storage data:', chrome.runtime.lastError);
@@ -146,6 +148,16 @@ function checkAndConvertPrices() {
       if (missingRates.length > 0) {
         console.warn(`Missing exchange rates: ${missingRates.join(', ')}`);
       }
+      
+      // Percentage operation değerini belirle - her iki site tipi için aynı değeri kullan
+      // Eğer euroPercentageOperation veya tlPercentageOperation varsa, ikisinden birini kullan
+      // İkisi de yoksa, varsayılan olarak false kullan
+      const percentageOperation = result.euroPercentageOperation !== undefined ? 
+        result.euroPercentageOperation : 
+        (result.tlPercentageOperation !== undefined ? result.tlPercentageOperation : false);
+      
+      // Sonuç nesnesine percentageOperation değerini ekle
+      result.percentageOperation = percentageOperation;
 
       // Domain bazlı işlemciye yönlendir
       const domainProcessor = getDomainProcessor(domainConfig.name);
@@ -313,7 +325,9 @@ function processGenericSite(domainConfig, settings) {
               shippingCost: settings.shippingCost || 0,
               extraCost: settings.extraCost || false,
               kdvAction: settings.kdvAction || 'none',
-              discountAmount: settings.discountAmount || 0
+              discountAmount: settings.discountAmount || 0,
+              salesCost: settings.salesCost || 10,
+              salesCostEnabled: settings.salesCostEnabled === true
             };
 
             // Doğru dönüştürücüyü al
@@ -428,4 +442,4 @@ window.getKdvStatusText = getKdvStatusText;
 window.markAsConverted = markAsConverted;
 window.checkAndConvertPrices = checkAndConvertPrices;
 window.processGenericSite = processGenericSite;
-window.getDomainProcessor = getDomainProcessor; 
+window.getDomainProcessor = getDomainProcessor;

@@ -149,8 +149,10 @@ function calculateFinanceAndRMA(convertedPrice, config, currencySymbol, kdvStatu
     let html = '';
     
     if (config.financeCost) {
-      const isAdd = isEuroBasedSite && percentageOperation === true;
-      const operationSymbol = isEuroBasedSite ? (isAdd ? '+' : '-') : '-';
+      // Yüzde işlemi için storage'dan değeri al
+      // percentageOperation parametresi artık her iki site tipi için de aynı değeri kullanır
+      const isAdd = percentageOperation === true;
+      const operationSymbol = isAdd ? '+' : '-';
       
       // Finans maliyeti hesaplama
       const financePercentage = config.financeCost / 100;
@@ -195,6 +197,13 @@ function getCompactFinanceHTML(convertedPrice, config, currencySymbol, kdvStatus
       return '';
     }
     
+    // Konsola config değerlerini yazdıralım, debug için
+    console.log('getCompactFinanceHTML config:', {
+      salesCostEnabled: config.salesCostEnabled,
+      salesCost: config.salesCost,
+      financeCost: config.financeCost
+    });
+    
     let html = '';
     
     if (config.financeCost) {
@@ -209,10 +218,31 @@ function getCompactFinanceHTML(convertedPrice, config, currencySymbol, kdvStatus
       
       html += `
         <div style="color: #28a745; font-size: 12px; display: flex; align-items: center; gap: 4px;">
-          <span>Fin(${operationSymbol}${config.financeCost}%):</span>
+          <span>İ.M.F(${operationSymbol}${config.financeCost}%):</span>
           <strong>${currencySymbol}${financeDiscounted.toFixed(2)}${kdvStatus}</strong>
         </div>
       `;
+
+      // Satış maliyeti hesaplama (İ.M.F. değerinden sonra)
+      // Sadece salesCostEnabled true ise S.M. değerini göster
+      // Boolean olarak kesin kontrol yapalım
+      if (config.salesCostEnabled === true) {
+        console.log('S.M. değeri gösteriliyor (compact), config.salesCostEnabled:', config.salesCostEnabled);
+        const salesCost = config.salesCost !== undefined ? config.salesCost : 10;
+        const salesPercentage = salesCost / 100;
+        const salesDiscounted = isAdd ? 
+          financeDiscounted * (1 + salesPercentage) : 
+          financeDiscounted * (1 - salesPercentage);
+        
+        html += `
+          <div style="color: #28a745; font-size: 12px; display: flex; align-items: center; gap: 4px;">
+            <span>S.M.(${operationSymbol}${salesCost}%):</span>
+            <strong>${currencySymbol}${salesDiscounted.toFixed(2)}${kdvStatus}</strong>
+          </div>
+        `;
+      } else {
+        console.log('S.M. değeri gösterilmiyor (compact), config.salesCostEnabled:', config.salesCostEnabled);
+      }
 
       if (config.shippingCost) {
         // RMA maliyeti hesaplama
@@ -275,4 +305,4 @@ window.getCompactFinanceHTML = getCompactFinanceHTML;
 window.EuroBasedConverter = EuroBasedConverter;
 window.TryBasedConverter = TryBasedConverter;
 window.getConverter = getConverter;
-window.isDomainEuroBased = isDomainEuroBased; 
+window.isDomainEuroBased = isDomainEuroBased;

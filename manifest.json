@@ -3,14 +3,22 @@
   "name": "Price Calculator",
   "version": "1.0",
   "description": "Döviz kuru ile fiyat hesaplama uzantısı",
+  "icons": {
+    "16": "logo.png",
+    "32": "logo.png",
+    "48": "logo.png",
+    "128": "logo.png"
+  },
   "background": {
     "service_worker": "background.js"
   },
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": "logo.png"
   },
   "permissions": [
     "storage",
+    "storage.session",
     "tabs",
     "scripting",
     "activeTab"
@@ -24,7 +32,9 @@
     "https://www.trendyol.com/*",
     "https://shop.kosatec.de/*",
     "https://www.imcopex.shop/*",
-    "https://www.siewert-kau.com/*"
+    "https://www.siewert-kau.com/*",
+    "https://www.wave-distribution.de/*",
+    "<all_urls>"
   ],
   "content_scripts": [
     {
@@ -39,7 +49,9 @@
         "https://www.trendyol.com/*",
         "https://shop.kosatec.de/*",
         "https://www.imcopex.shop/*",
-        "https://www.siewert-kau.com/*"
+        "https://www.siewert-kau.com/*",
+        "https://www.wave-distribution.de/*",
+        "<all_urls>"
       ],
       "js": [
         "utils/currency.js",
@@ -47,6 +59,7 @@
         "utils/priceDisplay.js",
         "utils/observer.js",
         "utils/htmlRenderer.js",
+        "utils/dynamicUserSettings.js",
         "domains/akakce.js",
         "domains/amazon.js",
         "domains/hepsiburada.js",
@@ -54,10 +67,17 @@
         "domains/kosatec.js",
         "domains/imcopex.js",
         "domains/siewert-kau.js",
+        "domains/wave-distribution.js",
         "domainConfigs.js",
         "content.js"
       ],
       "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["xpathFinder.js", "xpathFinder.css"],
+      "matches": ["<all_urls>"]
     }
   ],
   "commands": {

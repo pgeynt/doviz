@@ -3,6 +3,17 @@ chrome.runtime.onInstalled.addListener(() => {
   updateRates();
   // Verileri her saat güncelle
   setInterval(updateRates, 3600000); // 1 hour = 3600000 ms
+  
+  // Eklenti yüklendiğinde oturum durumunu otomatik olarak doğrulanmış yap
+  chrome.storage.session.set({ authenticated: true });
+});
+
+// Tarayıcı başlangıcında oturum durumunu otomatik olarak doğrulanmış yap
+chrome.runtime.onStartup.addListener(() => {
+  // Tarayıcı başladığında kimlik doğrulama durumunu otomatik olarak doğrulanmış yap
+  chrome.storage.session.set({ authenticated: true }, () => {
+    console.log('Tarayıcı başlangıcında kimlik doğrulama durumu otomatik olarak doğrulanmış yapıldı.');
+  });
 });
 
 // XPath Finder ve popup.js arasındaki mesaj iletişimi
@@ -15,6 +26,39 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     chrome.storage.local.set(data, () => {
       console.log(`${request.type.toUpperCase()} rate saved:`, request.rate);
     });
+  }
+  
+  // Domain kaydetme işlemi
+  if (request.action === "saveDomain" && request.domain) {
+    console.log("Yeni domain kaydediliyor:", request.domain);
+    
+    // Domain'i storage'a kaydet
+    chrome.storage.local.get(['savedDomains'], (result) => {
+      const savedDomains = result.savedDomains || [];
+      
+      // Eğer domain zaten kaydedilmişse güncelle, yoksa ekle
+      const existingIndex = savedDomains.findIndex(d => d.hostname === request.domain.hostname);
+      
+      if (existingIndex > -1) {
+        savedDomains[existingIndex] = {
+          ...savedDomains[existingIndex],
+          ...request.domain,
+          timestamp: new Date().getTime()
+        };
+      } else {
+        savedDomains.push({
+          ...request.domain,
+          timestamp: new Date().getTime()
+        });
+      }
+      
+      chrome.storage.local.set({ savedDomains: savedDomains }, () => {
+        console.log("Domain başarıyla kaydedildi:", request.domain);
+        sendResponse({ success: true, message: "Domain başarıyla kaydedildi" });
+      });
+    });
+    
+    return true; // Asenkron yanıt için true döndür
   }
   
   // XPath Finder mesajlarını işle
@@ -50,6 +94,64 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   
   // Mesajı aldığımızı bildirmek için true döndür (asenkron işlem için)
   return true;
+});
+
+// Domain değişikliklerini izle
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete' && tab.url) {
+    try {
+      const url = new URL(tab.url);
+      const domain = url.hostname;
+      
+      // Kaydedilmiş domainleri kontrol et
+      chrome.storage.local.get(['savedDomains'], (result) => {
+        const savedDomains = result.savedDomains || [];
+        const matchedDomain = savedDomains.find(d => d.hostname === domain);
+        
+        if (matchedDomain) {
+          console.log(`Tab yüklemesi tamamlandı, kaydedilmiş domain algılandı: ${domain}`);
+          
+          // Content scriptleri yükle
+          chrome.scripting.executeScript({
+            target: { tabId: tabId },
+            files: [
+              'utils/currency.js',
+              'utils/domainHandler.js',
+              'utils/priceDisplay.js',
+              'utils/observer.js',
+              'utils/htmlRenderer.js',
+              'domains/akakce.js',
+              'domains/amazon.js',
+              'domains/hepsiburada.js',
+              'domains/trendyol.js',
+              'domains/kosatec.js',
+              'domains/imcopex.js',
+              'domains/siewert-kau.js',
+              'domainConfigs.js',
+              'content.js'
+            ]
+          }).then(() => {
+            console.log(`Content scriptler ${domain} için yüklendi`);
+            
+            // Content scripte kaydedilmiş selektörleri kontrol etmesini söyle
+            chrome.tabs.sendMessage(tabId, { 
+              action: 'refreshSelectors'
+            }, (response) => {
+              if (chrome.runtime.lastError) {
+                console.error('Mesaj gönderme hatası:', chrome.runtime.lastError);
+                return;
+              }
+              console.log('Seçici yenileme yanıtı:', response);
+            });
+          }).catch(err => {
+            console.error(`Content script yükleme hatası:`, err);
+          });
+        }
+      });
+    } catch (error) {
+      console.error('URL işleme hatası:', error);
+    }
+  }
 });
 
 function updateRates() {

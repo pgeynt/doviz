@@ -46,11 +46,18 @@ function createFinanceAndRmaHTML(convertedPrice, config, currencySymbol, kdvStat
       return '';
     }
     
+    // Konsola config değerlerini yazdıralım, debug için
+    console.log('createFinanceAndRmaHTML config:', {
+      salesCostEnabled: config.salesCostEnabled,
+      salesCost: config.salesCost,
+      financeCost: config.financeCost
+    });
+    
     let html = '';
     
     if (config.financeCost) {
-      const isAdd = isEuroBasedSite && percentageOperation === true;
-      const operationSymbol = isEuroBasedSite ? (isAdd ? '+' : '-') : '-';
+      const isAdd = percentageOperation === true;
+      const operationSymbol = isAdd ? '+' : '-';
       
       // Finans maliyeti hesaplama
       const financePercentage = config.financeCost / 100;
@@ -61,9 +68,30 @@ function createFinanceAndRmaHTML(convertedPrice, config, currencySymbol, kdvStat
       
       html += `
         <div style="color: #28a745; margin-bottom: 3px;">
-          Fin(${operationSymbol}${config.financeCost}%): ${currencySymbol}${financeDiscounted.toFixed(2)}${kdvStatus}
+          İ.M.F(${operationSymbol}${config.financeCost}%): ${currencySymbol}${financeDiscounted.toFixed(2)}${kdvStatus}
         </div>
       `;
+
+      // Satış maliyeti hesaplama (İ.M.F. değerinden sonra)
+      // Sadece salesCostEnabled true ise S.M. değerini göster
+      // Boolean olarak kesin kontrol yapalım
+      if (config.salesCostEnabled === true) {
+        console.log('S.M. değeri gösteriliyor, config:', config);
+        const salesCost = config.salesCost !== undefined ? config.salesCost : 10;
+        const salesPercentage = salesCost / 100;
+        const salesAmount = financeDiscounted * salesPercentage;
+        const salesDiscounted = isAdd ? 
+          financeDiscounted + salesAmount : 
+          financeDiscounted - salesAmount;
+        
+        html += `
+          <div style="color: #28a745; margin-bottom: 3px;">
+            S.M.(${operationSymbol}${salesCost}%): ${currencySymbol}${salesDiscounted.toFixed(2)}${kdvStatus}
+          </div>
+        `;
+      } else {
+        console.log('S.M. değeri gösterilmiyor, config.salesCostEnabled:', config.salesCostEnabled);
+      }
 
       if (config.shippingCost) {
         // RMA/Yol maliyeti hesaplama
@@ -78,7 +106,22 @@ function createFinanceAndRmaHTML(convertedPrice, config, currencySymbol, kdvStat
             RMA(${operationSymbol}${config.shippingCost}%): ${currencySymbol}${shippingDiscounted.toFixed(2)}${kdvStatus}
           </div>
         `;
-      }
+        
+        // Satış maliyeti (eğer etkinleştirilmişse)
+        if (config.salesCost && config.salesCostEnabled) {
+          const salesPercentage = config.salesCost / 100;
+          const salesAmount = shippingDiscounted * salesPercentage;
+          const salesDiscounted = isAdd ? 
+            shippingDiscounted + salesAmount :
+            shippingDiscounted - salesAmount;
+          
+          html += `
+            <div style="color: #28a745;">
+              S.M.(${operationSymbol}${config.salesCost}%): ${currencySymbol}${salesDiscounted.toFixed(2)}${kdvStatus}
+            </div>
+          `;
+        }
+      } 
     }
     
     return html;
@@ -109,7 +152,7 @@ function createCompactFinanceHTML(convertedPrice, config, currencySymbol, kdvSta
       
       html += `
         <div style="color: #28a745; font-size: 12px; display: flex; align-items: center; gap: 4px;">
-          <span>Fin(${operationSymbol}${config.financeCost}%):</span>
+          <span>İ.M.F(${operationSymbol}${config.financeCost}%):</span>
           <strong>${currencySymbol}${financeDiscounted.toFixed(2)}${kdvStatus}</strong>
         </div>
       `;
@@ -125,6 +168,34 @@ function createCompactFinanceHTML(convertedPrice, config, currencySymbol, kdvSta
           <div style="color: #28a745; font-size: 12px; display: flex; align-items: center; gap: 4px;">
             <span>RMA(${operationSymbol}${config.shippingCost}%):</span>
             <strong>${currencySymbol}${shippingDiscounted.toFixed(2)}${kdvStatus}</strong>
+          </div>
+        `;
+        
+        // Satış maliyeti (eğer etkinleştirilmişse)
+        if (config.salesCost && config.salesCostEnabled) {
+          const salesPercentage = config.salesCost / 100;
+          const salesDiscounted = isAdd ? 
+            shippingDiscounted * (1 + salesPercentage) : 
+            shippingDiscounted * (1 - salesPercentage);
+          
+          html += `
+            <div style="color: #28a745; font-size: 12px; display: flex; align-items: center; gap: 4px;">
+              <span>S.M.(${operationSymbol}${config.salesCost}%):</span>
+              <strong>${currencySymbol}${salesDiscounted.toFixed(2)}${kdvStatus}</strong>
+            </div>
+          `;
+        }
+      } else if (config.salesCost && config.salesCostEnabled) {
+        // RMA/Yol maliyeti yoksa ama satış maliyeti varsa
+        const salesPercentage = config.salesCost / 100;
+        const salesDiscounted = isAdd ? 
+          financeDiscounted * (1 + salesPercentage) : 
+          financeDiscounted * (1 - salesPercentage);
+        
+        html += `
+          <div style="color: #28a745; font-size: 12px; display: flex; align-items: center; gap: 4px;">
+            <span>S.M.(${operationSymbol}${config.salesCost}%):</span>
+            <strong>${currencySymbol}${salesDiscounted.toFixed(2)}${kdvStatus}</strong>
           </div>
         `;
       }
@@ -417,7 +488,13 @@ function createAkakceHTML(priceData) {
 
 function createGenericHTML(priceData) {
   try {
-    const { html } = priceData;
+    const { html, config } = priceData;
+
+    // Debug için config bilgilerini konsola yazdıralım
+    console.log('createGenericHTML config:', {
+      salesCostEnabled: config ? config.salesCostEnabled : undefined,
+      salesCost: config ? config.salesCost : undefined
+    });
 
     // TL bazlı diğer siteler için
     const wrapper = document.createElement('div');
@@ -483,16 +560,39 @@ function createGenericHTML(priceData) {
 function getDomainHtmlRenderer(domainName) {
   if (!domainName) return createGenericHTML;
   
+  // Domain adını logla
+  console.log('getDomainHtmlRenderer çağrıldı, domain:', domainName);
+  
   const renderers = {
     'Hepsiburada': createHepsiburadaHTML,
     'Trendyol': createTrendyolHTML,
     'Akakce': createAkakceHTML,
     'Kosatec': createEuroBasedHTML,
     'Imcopex': createEuroBasedHTML,
-    'Siewert-Kau': createEuroBasedHTML
+    'Siewert-Kau': createEuroBasedHTML,
+    'UserDefined': createGenericHTML // Varsayılan olarak generic HTML oluşturucu kullan
   };
   
-  return renderers[domainName] || createGenericHTML;
+  // Kullanıcı tanımlı domain için, kullanıcının seçtiği para birimi tipine göre render et
+  if (domainName === 'UserDefined' && typeof DomainHandler !== 'undefined' && typeof DomainHandler.isEuroBased === 'function') {
+    if (DomainHandler.isEuroBased()) {
+      console.log('Rendering Euro-based HTML for user-defined domain');
+      return createEuroBasedHTML;
+    } else {
+      console.log('Rendering Generic HTML for user-defined domain (TL-based)');
+      return createGenericHTML;
+    }
+  }
+  
+  // Tanımlı domainler için renderer'ı döndür, yoksa generic kullan
+  const renderer = renderers[domainName];
+  if (renderer) {
+    console.log(`Using ${domainName} renderer`);
+    return renderer;
+  }
+  
+  console.log(`No specific renderer for ${domainName}, using generic`);
+  return createGenericHTML;
 }
 
 // Export
@@ -504,4 +604,5 @@ window.createTrendyolHTML = createTrendyolHTML;
 window.createEuroBasedHTML = createEuroBasedHTML;
 window.createAkakceHTML = createAkakceHTML;
 window.createGenericHTML = createGenericHTML;
-window.getDomainHtmlRenderer = getDomainHtmlRenderer; 
+window.getDomainHtmlRenderer = getDomainHtmlRenderer;
+window.getDomainHtmlRenderer = getDomainHtmlRenderer;
