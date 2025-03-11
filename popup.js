@@ -217,9 +217,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
   
-  // Sayfa yüklendiğinde varsayılan olarak %5 seçili olsun ve satış masrafları 10 olsun
-  chrome.storage.local.set({ financeCost: 5, shippingCost: 0, salesCost: 10, salesCostEnabled: false });
-  updatePageConversions();
+  // Sayfa yüklendiğinde varsayılan değerleri kontrol et ve ayarlanmamışsa ayarla
+  chrome.storage.local.get(['financeCost', 'shippingCost', 'salesCost', 'salesCostEnabled'], function(result) {
+    const defaults = {};
+    if (result.financeCost === undefined) defaults.financeCost = 5;
+    if (result.shippingCost === undefined) defaults.shippingCost = 0;
+    if (result.salesCost === undefined) defaults.salesCost = 10;
+    if (result.salesCostEnabled === undefined) defaults.salesCostEnabled = true;
+    
+    if (Object.keys(defaults).length > 0) {
+      chrome.storage.local.set(defaults);
+    }
+    updatePageConversions();
+  });
   
   const extraCostCheckbox = document.getElementById('extra-cost');
   const discountAmountInput = document.getElementById('discount-amount');
@@ -2235,6 +2245,20 @@ function activateXPathFinderWithRetry(tabId, attempt = 1) {
     }
   }
 }
+
+  // Sayfa yüklendiğinde varsayılan değerleri kontrol et ve ayarlanmamışsa ayarla
+  chrome.storage.local.get(['financeCost', 'shippingCost', 'salesCost', 'salesCostEnabled'], function(result) {
+    const defaults = {};
+    if (result.financeCost === undefined) defaults.financeCost = 5;
+    if (result.shippingCost === undefined) defaults.shippingCost = 0;
+    if (result.salesCost === undefined) defaults.salesCost = 10;
+    if (result.salesCostEnabled === undefined) defaults.salesCostEnabled = true;
+    
+    if (Object.keys(defaults).length > 0) {
+      chrome.storage.local.set(defaults);
+    }
+    updatePageConversions();
+  });
 
 
 
