@@ -11,6 +11,51 @@ document.addEventListener('DOMContentLoaded', () => {
   const authCodeInput = document.getElementById('auth-code');
   const authSubmitButton = document.getElementById('auth-submit');
   const authError = document.getElementById('auth-error');
+  const extensionToggle = document.getElementById('extension-status-toggle');
+
+  // Eklentinin durumunu kontrol etmek için
+  chrome.storage.local.get(['extensionEnabled'], function(result) {
+    // Varsayılan olarak eklenti etkin
+    const isEnabled = result.extensionEnabled !== undefined ? result.extensionEnabled : true;
+    extensionToggle.checked = isEnabled;
+    updateToggleLabel(isEnabled);
+  });
+
+  // Toggle switch değiştiğinde
+  extensionToggle.addEventListener('change', function() {
+    const isEnabled = extensionToggle.checked;
+    
+    // Görsel geri bildirim ver
+    updateToggleLabel(isEnabled);
+    
+    // Eklenti durumunu sakla
+    chrome.storage.local.set({ extensionEnabled: isEnabled }, function() {
+      console.log(`Eklenti durumu güncellendi: ${isEnabled ? 'Etkin' : 'Devre dışı'}`);
+      
+      // Tüm aktif sekmelere mesaj gönder (aktif sekmede çalışması için)
+      chrome.tabs.query({}, function(tabs) {
+        for (let tab of tabs) {
+          try {
+            chrome.tabs.sendMessage(tab.id, { 
+              action: "toggleExtension", 
+              enabled: isEnabled 
+            });
+          } catch (e) {
+            // Bazı sekmelerde içerik betiği olmayabilir, hataları görmezden gel
+          }
+        }
+      });
+    });
+  });
+  
+  // Toggle butonunun etiketini güncelleyen yardımcı fonksiyon
+  function updateToggleLabel(isEnabled) {
+    const labelElement = document.querySelector('.extension-toggle-label');
+    if (labelElement) {
+      labelElement.textContent = isEnabled ? 'Eklenti Etkin' : 'Eklenti Devre Dışı';
+      labelElement.style.color = isEnabled ? '#00EED0' : '#aaa';
+    }
+  }
 
   // Kimlik doğrulama kontrolü
   function checkAuthentication() {
@@ -218,16 +263,30 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   // Sayfa yüklendiğinde varsayılan değerleri kontrol et ve ayarlanmamışsa ayarla
-  chrome.storage.local.get(['financeCost', 'shippingCost', 'salesCost', 'salesCostEnabled'], function(result) {
+  chrome.storage.local.get(['financeCost', 'shippingCost', 'salesCost', 'salesCostEnabled', 'totalCost', 'costMethod'], function(result) {
     const defaults = {};
     if (result.financeCost === undefined) defaults.financeCost = 5;
     if (result.shippingCost === undefined) defaults.shippingCost = 0;
     if (result.salesCost === undefined) defaults.salesCost = 10;
     if (result.salesCostEnabled === undefined) defaults.salesCostEnabled = true;
+    if (result.totalCost === undefined) defaults.totalCost = 15;
+    if (result.costMethod === undefined) defaults.costMethod = 'detailed';
     
     if (Object.keys(defaults).length > 0) {
       chrome.storage.local.set(defaults);
     }
+    
+    // Kaydedilmiş maliyet yöntemini seç
+    if (result.costMethod) {
+      if (result.costMethod === 'detailed') {
+        costMethodDetailed.checked = true;
+        costMethodTotal.checked = false;
+      } else {
+        costMethodDetailed.checked = false;
+        costMethodTotal.checked = true;
+      }
+    }
+    
     updatePageConversions();
   });
   
@@ -235,6 +294,30 @@ document.addEventListener('DOMContentLoaded', () => {
   const discountAmountInput = document.getElementById('discount-amount');
   const salesCostInput = document.getElementById('sales-cost');
   const salesCostEnabledCheckbox = document.getElementById('sales-cost-enabled');
+  const totalCostInput = document.getElementById('total-cost');
+  const costMethodDetailed = document.getElementById('cost-method-1');
+  const costMethodTotal = document.getElementById('cost-method-2');
+
+  // Maliyet hesaplama yöntemi seçimini dinle
+  costMethodDetailed.addEventListener('change', (e) => {
+    if (e.target.checked) {
+      console.log("🔄 Detaylı Masraf seçildi");
+      chrome.storage.local.set({ costMethod: 'detailed' }, () => {
+        console.log("💾 costMethod: 'detailed' değeri kaydedildi");
+        updatePageConversions();
+      });
+    }
+  });
+
+  costMethodTotal.addEventListener('change', (e) => {
+    if (e.target.checked) {
+      console.log("🔄 Toplam Masraf seçildi");
+      chrome.storage.local.set({ costMethod: 'total' }, () => {
+        console.log("💾 costMethod: 'total' değeri kaydedildi");
+        updatePageConversions();
+      });
+    }
+  });
 
   // Ek maliyet checkbox değişikliğini dinle
   extraCostCheckbox.addEventListener('change', (e) => {
@@ -295,15 +378,58 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Toplam maliyet değişikliğini dinle
+  totalCostInput.addEventListener('input', (e) => {
+    const value = parseFloat(e.target.value);
+    if (!isNaN(value)) {
+      chrome.storage.local.set({ totalCost: value });
+      updatePageConversions();
+    }
+  });
+
   const kdvDiscountCheckbox = document.getElementById('kdv-discount');
+  const kdvAddRadio = document.getElementById('kdv-add');
+  const kdvRemoveRadio = document.getElementById('kdv-remove');
 
   // KDV checkbox değişikliğini dinle
   kdvDiscountCheckbox.addEventListener('change', (e) => {
-    chrome.storage.local.set({ 
-      kdvAction: e.target.checked ? 'remove' : 'none',
-      kdvDiscount: e.target.checked // Geriye dönük uyumluluk için
-    });
+    // Checkbox işaretlenmemiş ise KDV işlemi yok
+    if (!e.target.checked) {
+      chrome.storage.local.set({ 
+        kdvAction: 'none',
+        kdvDiscount: false // Geriye dönük uyumluluk için
+      });
+      
+      // Radio butonlarını devre dışı bırak
+      kdvAddRadio.disabled = true;
+      kdvRemoveRadio.disabled = true;
+    } else {
+      // Checkbox işaretlenmiş - aktif radio butonun değerine göre kaydet
+      const kdvAction = document.querySelector('input[name="kdv-action"]:checked').value;
+      chrome.storage.local.set({ 
+        kdvAction: kdvAction,
+        kdvDiscount: kdvAction === 'remove' // Geriye dönük uyumluluk için
+      });
+      
+      // Radio butonlarını etkinleştir
+      kdvAddRadio.disabled = false;
+      kdvRemoveRadio.disabled = false;
+    }
     updatePageConversions();
+  });
+  
+  // KDV radio butonları değişikliğini dinle
+  document.querySelectorAll('input[name="kdv-action"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      if (kdvDiscountCheckbox.checked) {
+        const kdvAction = e.target.value;
+        chrome.storage.local.set({ 
+          kdvAction: kdvAction,
+          kdvDiscount: kdvAction === 'remove' // Geriye dönük uyumluluk için
+        });
+        updatePageConversions();
+      }
+    });
   });
 
   // Percentage operation checkbox event listener - TÜM DOMAİNLER İÇİN ORTAK KAYDETME İŞLEMİ
@@ -325,7 +451,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Kaydedilmiş değerleri geri yükle
-  chrome.storage.local.get(['financeCost', 'extraCost', 'kdvDiscount', 'discountAmount', 'euroPercentageOperation', 'tlPercentageOperation', 'salesCost', 'salesCostEnabled'], (result) => {
+  chrome.storage.local.get(['financeCost', 'extraCost', 'kdvAction', 'kdvDiscount', 'discountAmount', 'euroPercentageOperation', 'tlPercentageOperation', 'salesCost', 'salesCostEnabled', 'totalCost', 'costMethod'],
+    function(result) {
     if (result.financeCost) {
       // İndirim yüzdesi radio butonlarını ayarla
       if (result.financeCost === 10) {
@@ -341,8 +468,54 @@ document.addEventListener('DOMContentLoaded', () => {
         discountAmountInput.value = result.discountAmount;
       }
     }
-    if (result.kdvDiscount) {
-      kdvDiscountCheckbox.checked = result.kdvDiscount;
+    
+    // Toplam maliyet değerini yükle
+    if (result.totalCost !== undefined) {
+      totalCostInput.value = result.totalCost;
+    }
+    
+    // Maliyet hesaplama yöntemini yükle
+    if (result.costMethod) {
+      if (result.costMethod === 'detailed') {
+        costMethodDetailed.checked = true;
+        costMethodTotal.checked = false;
+      } else {
+        costMethodDetailed.checked = false;
+        costMethodTotal.checked = true;
+      }
+    }
+    
+    // KDV ayarlarını yükle
+    if (result.kdvAction && result.kdvAction !== 'none') {
+      kdvDiscountCheckbox.checked = true;
+      
+      // Radio butonları etkinleştir
+      kdvAddRadio.disabled = false;
+      kdvRemoveRadio.disabled = false;
+      
+      // Doğru radio butonu seç
+      if (result.kdvAction === 'add') {
+        kdvAddRadio.checked = true;
+      } else {
+        kdvRemoveRadio.checked = true;
+      }
+    } else {
+      kdvDiscountCheckbox.checked = false;
+      
+      // Radio butonları devre dışı bırak
+      kdvAddRadio.disabled = true;
+      kdvRemoveRadio.disabled = true;
+    }
+    
+    // Geriye dönük uyumluluk için eski kdvDiscount değerini kontrol et
+    if (result.kdvDiscount === true && result.kdvAction === undefined) {
+      kdvDiscountCheckbox.checked = true;
+      kdvRemoveRadio.checked = true;
+      kdvAddRadio.disabled = false;
+      kdvRemoveRadio.disabled = false;
+      
+      // Storage'ı güncelle
+      chrome.storage.local.set({ kdvAction: 'remove' });
     }
     
     // Satış masrafları değerlerini yükle
@@ -448,12 +621,6 @@ document.addEventListener('DOMContentLoaded', () => {
           chrome.storage.local.set({ selectedCurrency: 'usd_from_eur' });
         }
       });
-
-      // KDV checkbox'ı gizle
-      const kdvContainer = document.querySelector('.checkbox-container.mt-2');
-      if (kdvContainer) {
-        kdvContainer.style.display = 'none';
-      }
 
       // Euro için özel ayarlar
       document.getElementById('currency-settings-title').textContent = 'Euro Ayarları';
@@ -1235,7 +1402,7 @@ function updatePageConversions() {
       'selectedCurrency', 'financeCost', 'shippingCost', 
       'extraCost', 'kdvAction', 'discountAmount', 
       'euroPercentageOperation', 'tlPercentageOperation',
-      'salesCost', 'salesCostEnabled'
+      'salesCost', 'salesCostEnabled', 'totalCost', 'costMethod'
     ], (settings) => {
       // Boolean değerleri kesin boolean tipine dönüştürelim
       const cleanSettings = {
@@ -1251,33 +1418,44 @@ function updatePageConversions() {
       cleanSettings.shippingCost = parseFloat(cleanSettings.shippingCost) || 0;
       cleanSettings.salesCost = parseFloat(cleanSettings.salesCost) || 10;
       cleanSettings.discountAmount = parseFloat(cleanSettings.discountAmount) || 0;
+      cleanSettings.totalCost = parseFloat(cleanSettings.totalCost) || 15;
+      
+      // Maliyet hesaplama yöntemini temizlenmiş ayarlara ekleyelim (default olarak detailed)
+      cleanSettings.costMethod = typeof settings.costMethod === 'string' ? settings.costMethod : 'detailed';
       
       console.log('🔄 Güncel ayarlar (temizlenmiş):', cleanSettings);
+      console.log('📊 Maliyet hesaplama yöntemi (updatePageConversions):', cleanSettings.costMethod);
       
       chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
         if (tabs[0]) {
-          chrome.tabs.sendMessage(tabs[0].id, { 
-            action: 'updateConversions',
-            settings: cleanSettings // Temizlenmiş ayarları gönderelim
-          }, (response) => {
-            if (chrome.runtime.lastError) {
-              console.error('❌ Dönüşüm güncelleme hatası:', chrome.runtime.lastError);
-              return;
-            }
+          // Önce şu anki costMethod'u kaydet
+          chrome.storage.local.set({ costMethod: cleanSettings.costMethod }, () => {
+            console.log('💾 costMethod kaydedildi:', cleanSettings.costMethod);
             
-            console.log('✅ Dönüşümler güncellendi, yanıt:', response);
-            
-            // Ayrıca dinamik ayarlar mesajı da gönder - kullanıcı tanımlı domainler için
-            chrome.tabs.sendMessage(tabs[0].id, {
-              action: 'applyDynamicSettings',
-              settings: cleanSettings // Burada da temizlenmiş ayarları gönderelim
-            }, (dynamicResponse) => {
+            // Sonra hesaplamaları yap
+            chrome.tabs.sendMessage(tabs[0].id, { 
+              action: 'updateConversions',
+              settings: cleanSettings // Temizlenmiş ayarları gönderelim
+            }, (response) => {
               if (chrome.runtime.lastError) {
-                console.warn('⚠️ Dinamik ayarlar uygulanamadı:', chrome.runtime.lastError);
-                // İlk mesaj başarılı olduğu için hata gösterme
-              } else {
-                console.log('✅ Dinamik ayarlar uygulandı:', dynamicResponse);
+                console.error('❌ Dönüşüm güncelleme hatası:', chrome.runtime.lastError);
+                return;
               }
+              
+              console.log('✅ Dönüşümler güncellendi, yanıt:', response);
+              
+              // Ayrıca dinamik ayarlar mesajı da gönder - kullanıcı tanımlı domainler için
+              chrome.tabs.sendMessage(tabs[0].id, {
+                action: 'applyDynamicSettings',
+                settings: cleanSettings // Burada da temizlenmiş ayarları gönderelim
+              }, (dynamicResponse) => {
+                if (chrome.runtime.lastError) {
+                  console.warn('⚠️ Dinamik ayarlar uygulanamadı:', chrome.runtime.lastError);
+                  // İlk mesaj başarılı olduğu için hata gösterme
+                } else {
+                  console.log('✅ Dinamik ayarlar uygulandı:', dynamicResponse);
+                }
+              });
             });
           });
         }
@@ -2247,16 +2425,30 @@ function activateXPathFinderWithRetry(tabId, attempt = 1) {
 }
 
   // Sayfa yüklendiğinde varsayılan değerleri kontrol et ve ayarlanmamışsa ayarla
-  chrome.storage.local.get(['financeCost', 'shippingCost', 'salesCost', 'salesCostEnabled'], function(result) {
+  chrome.storage.local.get(['financeCost', 'shippingCost', 'salesCost', 'salesCostEnabled', 'totalCost', 'costMethod'], function(result) {
     const defaults = {};
     if (result.financeCost === undefined) defaults.financeCost = 5;
     if (result.shippingCost === undefined) defaults.shippingCost = 0;
     if (result.salesCost === undefined) defaults.salesCost = 10;
     if (result.salesCostEnabled === undefined) defaults.salesCostEnabled = true;
+    if (result.totalCost === undefined) defaults.totalCost = 15;
+    if (result.costMethod === undefined) defaults.costMethod = 'detailed';
     
     if (Object.keys(defaults).length > 0) {
       chrome.storage.local.set(defaults);
     }
+    
+    // Kaydedilmiş maliyet yöntemini seç
+    if (result.costMethod) {
+      if (result.costMethod === 'detailed') {
+        costMethodDetailed.checked = true;
+        costMethodTotal.checked = false;
+      } else {
+        costMethodDetailed.checked = false;
+        costMethodTotal.checked = true;
+      }
+    }
+    
     updatePageConversions();
   });
 

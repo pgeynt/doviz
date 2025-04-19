@@ -4,7 +4,7 @@
 function createBasicPriceHTML(originalPrice, convertedPrice, currencySymbol, workingPrice, baseCurrency, config, kdvStatus) {
   try {
     let html = `
-      <div style="margin-bottom: 5px; color: #333;">
+      <div style="margin-bottom: 4px; color: #333; font-size: 11px;">
         <strong>${originalPrice.toFixed(2)} ${baseCurrency}</strong>
       </div>
     `;
@@ -19,7 +19,7 @@ function createBasicPriceHTML(originalPrice, convertedPrice, currencySymbol, wor
         (config.kdvAction === 'remove' ? workingPrice * 1.20 : workingPrice);
       
       html += `
-        <div style="color: #0066cc; margin-bottom: 3px;">
+        <div style="color: #0066cc; margin-bottom: 2px; font-size: 10px;">
           İndirimli: ${displayPrice.toFixed(2)} ${baseCurrency} (-${config.discountAmount})
         </div>
       `;
@@ -27,7 +27,7 @@ function createBasicPriceHTML(originalPrice, convertedPrice, currencySymbol, wor
 
     // Döviz çevrimi gösterimi
     html += `
-      <div style="color: #dc3545; margin-bottom: 3px;">
+      <div style="color: #dc3545; margin-bottom: 2px; font-size: 11px;">
         ${currencySymbol}${convertedPrice.toFixed(2)}${kdvStatus}
       </div>
     `;
@@ -79,9 +79,9 @@ function clearExistingConversions() {
 function getKdvStatusText(kdvAction) {
   let kdvStatus = '';
   if (kdvAction === 'remove') {
-    kdvStatus = ' (KDV Hariç)';
+    kdvStatus = ' (-%20)';
   } else if (kdvAction === 'add') {
-    kdvStatus = ' (KDV Dahil)';
+    kdvStatus = ' (+%20)';
   }
   return kdvStatus;
 }
@@ -130,7 +130,9 @@ function checkAndConvertPrices() {
       'euroPercentageOperation',  
       'tlPercentageOperation',
       'salesCost',
-      'salesCostEnabled'
+      'salesCostEnabled',
+      'totalCost',
+      'costMethod'
     ], function(result) {
       if (chrome.runtime.lastError) {
         console.error('Error getting storage data:', chrome.runtime.lastError);
@@ -327,8 +329,12 @@ function processGenericSite(domainConfig, settings) {
               kdvAction: settings.kdvAction || 'none',
               discountAmount: settings.discountAmount || 0,
               salesCost: settings.salesCost || 10,
-              salesCostEnabled: settings.salesCostEnabled === true
+              salesCostEnabled: settings.salesCostEnabled === true,
+              totalCost: settings.totalCost || 15,
+              costMethod: typeof settings.costMethod === 'string' ? settings.costMethod : 'detailed'
             };
+
+            console.log("Maliyet hesaplama yöntemi (priceDisplay):", config.costMethod);
 
             // Doğru dönüştürücüyü al
             const converter = DomainHandler.getPriceConverter();

@@ -50,83 +50,97 @@ function createFinanceAndRmaHTML(convertedPrice, config, currencySymbol, kdvStat
     console.log('createFinanceAndRmaHTML config:', {
       salesCostEnabled: config.salesCostEnabled,
       salesCost: config.salesCost,
-      financeCost: config.financeCost
+      financeCost: config.financeCost,
+      costMethod: config.costMethod
     });
     
     let html = '';
     
-    if (config.financeCost) {
-      const isAdd = percentageOperation === true;
-      const operationSymbol = isAdd ? '+' : '-';
+    // Maliyet hesaplama yöntemini kontrol et
+    const costMethod = config && typeof config.costMethod === 'string' ? config.costMethod : 'detailed';
+    
+    if (costMethod === 'total') {
+      // Toplam Masraf modu - sadece toplam maliyet göster
+      console.log('createFinanceAndRmaHTML: Toplam Masraf modu seçildi, sadece toplam maliyet gösteriliyor.');
       
-      // Finans maliyeti hesaplama
-      const financePercentage = config.financeCost / 100;
-      const financeAmount = convertedPrice * financePercentage;
-      let financeDiscounted = isAdd ? 
-        convertedPrice + financeAmount : 
-        convertedPrice - financeAmount;
-      
-      html += `
-        <div style="color: #28a745; margin-bottom: 3px;">
-          İ.M.F(${operationSymbol}${config.financeCost}%): ${currencySymbol}${financeDiscounted.toFixed(2)}${kdvStatus}
-        </div>
-      `;
-
-      // Satış maliyeti hesaplama (İ.M.F. değerinden sonra)
-      // Sadece salesCostEnabled true ise S.M. değerini göster
-      // Boolean olarak kesin kontrol yapalım
-      if (config.salesCostEnabled === true) {
-        console.log('S.M. değeri gösteriliyor, config:', config);
-        const salesCost = config.salesCost !== undefined ? config.salesCost : 10;
-        const salesPercentage = salesCost / 100;
-        const salesAmount = financeDiscounted * salesPercentage;
-        const salesDiscounted = isAdd ? 
-          financeDiscounted + salesAmount : 
-          financeDiscounted - salesAmount;
+      if (config.totalCost) {
+        const isAdd = percentageOperation === true;
+        const operationSymbol = isAdd ? '+' : '-';
+        
+        // Toplam maliyet hesaplama
+        const totalPercentage = config.totalCost / 100;
+        const totalAmount = convertedPrice * totalPercentage;
+        const totalDiscounted = isAdd ? 
+          convertedPrice + totalAmount : 
+          convertedPrice - totalAmount;
         
         html += `
-          <div style="color: #28a745; margin-bottom: 3px;">
-            S.M.(${operationSymbol}${salesCost}%): ${currencySymbol}${salesDiscounted.toFixed(2)}${kdvStatus}
+          <div style="color: #006622; font-size: 10px; white-space: nowrap; overflow: visible; margin-bottom: 2px; background-color: #e6f7ee; padding: 2px 4px; border-radius: 3px; border: 1px solid #c9e9d9;">
+            T.M.(${operationSymbol}${config.totalCost}%): <strong>${currencySymbol}${totalDiscounted.toFixed(2)}${kdvStatus}</strong>
           </div>
         `;
-      } else {
-        console.log('S.M. değeri gösterilmiyor, config.salesCostEnabled:', config.salesCostEnabled);
       }
-
-      if (config.shippingCost) {
-        // RMA/Yol maliyeti hesaplama
-        const shippingPercentage = config.shippingCost / 100;
-        const shippingAmount = financeDiscounted * shippingPercentage;
-        let shippingDiscounted = isAdd ? 
-          financeDiscounted + shippingAmount :
-          financeDiscounted - shippingAmount;
+    } else {
+      // Detaylı masraf modu - İMF ve SM göster
+      if (config.financeCost) {
+        const isAdd = percentageOperation === true;
+        const operationSymbol = isAdd ? '+' : '-';
+        
+        // Finans maliyeti hesaplama
+        const financePercentage = config.financeCost / 100;
+        const financeAmount = convertedPrice * financePercentage;
+        let financeDiscounted = isAdd ? 
+          convertedPrice + financeAmount : 
+          convertedPrice - financeAmount;
         
         html += `
-          <div style="color: #28a745;">
-            RMA(${operationSymbol}${config.shippingCost}%): ${currencySymbol}${shippingDiscounted.toFixed(2)}${kdvStatus}
+          <div style="color: #006622; font-size: 10px; white-space: nowrap; overflow: visible; margin-bottom: 2px; background-color: #e6f7ee; padding: 2px 4px; border-radius: 3px; border: 1px solid #c9e9d9;">
+            İ.M.F(${operationSymbol}${config.financeCost}%): <strong>${currencySymbol}${financeDiscounted.toFixed(2)}${kdvStatus}</strong>
           </div>
         `;
-        
-        // Satış maliyeti (eğer etkinleştirilmişse)
-        if (config.salesCost && config.salesCostEnabled) {
-          const salesPercentage = config.salesCost / 100;
-          const salesAmount = shippingDiscounted * salesPercentage;
+
+        // Satış maliyeti hesaplama (İ.M.F. değerinden sonra)
+        // Sadece salesCostEnabled true ise S.M. değerini göster
+        // Boolean olarak kesin kontrol yapalım
+        if (config.salesCostEnabled === true) {
+          console.log('S.M. değeri gösteriliyor, config:', config);
+          const salesCost = config.salesCost !== undefined ? config.salesCost : 10;
+          const salesPercentage = salesCost / 100;
+          const salesAmount = financeDiscounted * salesPercentage;
           const salesDiscounted = isAdd ? 
-            shippingDiscounted + salesAmount :
-            shippingDiscounted - salesAmount;
+            financeDiscounted + salesAmount : 
+            financeDiscounted - salesAmount;
           
           html += `
-            <div style="color: #28a745;">
-              S.M.(${operationSymbol}${config.salesCost}%): ${currencySymbol}${salesDiscounted.toFixed(2)}${kdvStatus}
+            <div style="color: #006622; font-size: 10px; white-space: nowrap; overflow: visible; margin-bottom: 2px; background-color: #e6f7ee; padding: 2px 4px; border-radius: 3px; border: 1px solid #c9e9d9;">
+              S.M.(${operationSymbol}${config.salesCost}%): <strong>${currencySymbol}${salesDiscounted.toFixed(2)}${kdvStatus}</strong>
+            </div>
+          `;
+        } else {
+          console.log('S.M. değeri gösterilmiyor, config.salesCostEnabled:', config.salesCostEnabled);
+        }
+        
+        // RMA/Yol maliyeti (eğer varsa)
+        if (config.shippingCost) {
+          // RMA/Yol maliyeti hesaplama
+          const shippingPercentage = config.shippingCost / 100;
+          const shippingAmount = financeDiscounted * shippingPercentage;
+          let shippingDiscounted = isAdd ? 
+            financeDiscounted + shippingAmount :
+            financeDiscounted - shippingAmount;
+          
+          html += `
+            <div style="color: #006622; font-size: 10px; white-space: nowrap; overflow: visible; margin-bottom: 2px; background-color: #e6f7ee; padding: 2px 4px; border-radius: 3px; border: 1px solid #c9e9d9;">
+              Yol/R.M.A(${operationSymbol}${config.shippingCost}%): <strong>${currencySymbol}${shippingDiscounted.toFixed(2)}${kdvStatus}</strong>
             </div>
           `;
         }
-      } 
+      }
     }
     
     return html;
   } catch (error) {
-    console.error('Error creating finance and RMA HTML:', error);
+    console.error('Error in createFinanceAndRmaHTML:', error);
     return '';
   }
 }
@@ -138,72 +152,102 @@ function createCompactFinanceHTML(convertedPrice, config, currencySymbol, kdvSta
       return '';
     }
     
+    // Konsola config değerlerini yazdıralım, debug için
+    console.log('createCompactFinanceHTML config:', {
+      salesCostEnabled: config.salesCostEnabled,
+      salesCost: config.salesCost,
+      financeCost: config.financeCost,
+      costMethod: config.costMethod
+    });
+    
     let html = '';
     
-    if (config.financeCost) {
-      const isAdd = percentageOperation === true;
-      const operationSymbol = isAdd ? '+' : '-';
+    // Maliyet hesaplama yöntemini kontrol et
+    const costMethod = config && typeof config.costMethod === 'string' ? config.costMethod : 'detailed';
+    
+    if (costMethod === 'total') {
+      // Toplam Masraf modu - sadece toplam maliyet göster
+      console.log('createCompactFinanceHTML: Toplam Masraf modu seçildi, sadece toplam maliyet gösteriliyor.');
       
-      // Finans maliyeti hesaplama
-      const financePercentage = config.financeCost / 100;
-      const financeDiscounted = isAdd ? 
-        convertedPrice * (1 + financePercentage) : 
-        convertedPrice * (1 - financePercentage);
-      
-      html += `
-        <div style="color: #28a745; font-size: 12px; display: flex; align-items: center; gap: 4px;">
-          <span>İ.M.F(${operationSymbol}${config.financeCost}%):</span>
-          <strong>${currencySymbol}${financeDiscounted.toFixed(2)}${kdvStatus}</strong>
-        </div>
-      `;
-
-      if (config.shippingCost) {
-        // RMA maliyeti hesaplama
-        const shippingPercentage = config.shippingCost / 100;
-        const shippingDiscounted = isAdd ? 
-          financeDiscounted * (1 + shippingPercentage) : 
-          financeDiscounted * (1 - shippingPercentage);
+      if (config.totalCost) {
+        const isAdd = percentageOperation === true;
+        const operationSymbol = isAdd ? '+' : '-';
+        
+        // Toplam maliyet hesaplama
+        const totalPercentage = config.totalCost / 100;
+        const totalDiscounted = isAdd ? 
+          convertedPrice * (1 + totalPercentage) : 
+          convertedPrice * (1 - totalPercentage);
         
         html += `
-          <div style="color: #28a745; font-size: 12px; display: flex; align-items: center; gap: 4px;">
-            <span>RMA(${operationSymbol}${config.shippingCost}%):</span>
-            <strong>${currencySymbol}${shippingDiscounted.toFixed(2)}${kdvStatus}</strong>
+          <div style="color: #006622; font-size: 10px; white-space: nowrap; overflow: visible; margin-bottom: 2px; background-color: #e6f7ee; padding: 2px 4px; border-radius: 3px; border: 1px solid #c9e9d9;">
+            T.M.(${operationSymbol}${config.totalCost}%): <strong>${currencySymbol}${totalDiscounted.toFixed(2)}${kdvStatus}</strong>
           </div>
         `;
+      }
+    } else {
+      // Detaylı masraf modu - İMF ve SM göster
+      if (config.financeCost) {
+        const isAdd = percentageOperation === true;
+        const operationSymbol = isAdd ? '+' : '-';
         
-        // Satış maliyeti (eğer etkinleştirilmişse)
-        if (config.salesCost && config.salesCostEnabled) {
-          const salesPercentage = config.salesCost / 100;
-          const salesDiscounted = isAdd ? 
-            shippingDiscounted * (1 + salesPercentage) : 
-            shippingDiscounted * (1 - salesPercentage);
+        // Finans maliyeti hesaplama
+        const financePercentage = config.financeCost / 100;
+        const financeDiscounted = isAdd ? 
+          convertedPrice * (1 + financePercentage) : 
+          convertedPrice * (1 - financePercentage);
+        
+        html += `
+          <div style="color: #006622; font-size: 10px; white-space: nowrap; overflow: visible; margin-bottom: 2px; background-color: #e6f7ee; padding: 2px 4px; border-radius: 3px; border: 1px solid #c9e9d9;">
+            İ.M.F(${operationSymbol}${config.financeCost}%): <strong>${currencySymbol}${financeDiscounted.toFixed(2)}${kdvStatus}</strong>
+          </div>
+        `;
+
+        if (config.shippingCost) {
+          // RMA maliyeti hesaplama
+          const shippingPercentage = config.shippingCost / 100;
+          const shippingDiscounted = isAdd ? 
+            financeDiscounted * (1 + shippingPercentage) : 
+            financeDiscounted * (1 - shippingPercentage);
           
           html += `
-            <div style="color: #28a745; font-size: 12px; display: flex; align-items: center; gap: 4px;">
-              <span>S.M.(${operationSymbol}${config.salesCost}%):</span>
-              <strong>${currencySymbol}${salesDiscounted.toFixed(2)}${kdvStatus}</strong>
+            <div style="color: #006622; font-size: 10px; white-space: nowrap; overflow: visible; margin-bottom: 2px; background-color: #e6f7ee; padding: 2px 4px; border-radius: 3px; border: 1px solid #c9e9d9;">
+              RMA(${operationSymbol}${config.shippingCost}%): <strong>${currencySymbol}${shippingDiscounted.toFixed(2)}${kdvStatus}</strong>
+            </div>
+          `;
+          
+          // Satış maliyeti (eğer etkinleştirilmişse)
+          if (config.salesCost && config.salesCostEnabled) {
+            const salesPercentage = config.salesCost / 100;
+            const salesDiscounted = isAdd ? 
+              shippingDiscounted * (1 + salesPercentage) : 
+              shippingDiscounted * (1 - salesPercentage);
+            
+            html += `
+              <div style="color: #006622; font-size: 10px; white-space: nowrap; overflow: visible; margin-bottom: 2px; background-color: #e6f7ee; padding: 2px 4px; border-radius: 3px; border: 1px solid #c9e9d9;">
+                S.M.(${operationSymbol}${config.salesCost}%): <strong>${currencySymbol}${salesDiscounted.toFixed(2)}${kdvStatus}</strong>
+              </div>
+            `;
+          }
+        } else if (config.salesCost && config.salesCostEnabled) {
+          // RMA/Yol maliyeti yoksa ama satış maliyeti varsa
+          const salesPercentage = config.salesCost / 100;
+          const salesDiscounted = isAdd ? 
+            financeDiscounted * (1 + salesPercentage) : 
+            financeDiscounted * (1 - salesPercentage);
+          
+          html += `
+            <div style="color: #006622; font-size: 10px; white-space: nowrap; overflow: visible; margin-bottom: 2px; background-color: #e6f7ee; padding: 2px 4px; border-radius: 3px; border: 1px solid #c9e9d9;">
+              S.M.(${operationSymbol}${config.salesCost}%): <strong>${currencySymbol}${salesDiscounted.toFixed(2)}${kdvStatus}</strong>
             </div>
           `;
         }
-      } else if (config.salesCost && config.salesCostEnabled) {
-        // RMA/Yol maliyeti yoksa ama satış maliyeti varsa
-        const salesPercentage = config.salesCost / 100;
-        const salesDiscounted = isAdd ? 
-          financeDiscounted * (1 + salesPercentage) : 
-          financeDiscounted * (1 - salesPercentage);
-        
-        html += `
-          <div style="color: #28a745; font-size: 12px; display: flex; align-items: center; gap: 4px;">
-            <span>S.M.(${operationSymbol}${config.salesCost}%):</span>
-            <strong>${currencySymbol}${salesDiscounted.toFixed(2)}${kdvStatus}</strong>
-          </div>
-        `;
       }
     }
     
     return html;
   } catch (error) {
-    console.error('Error creating compact finance HTML:', error);
+    console.error('Error in createCompactFinanceHTML:', error);
     return '';
   }
 }

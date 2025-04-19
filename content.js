@@ -21,300 +21,358 @@ function createPriceAnalyzeContainer(result, currencyType) {
       existingContainer.remove();
     }
 
-    // Dönüşüm sonuçlarından gerekli verileri çıkar
-    const { 
-      convertedPrice, 
-      currencySymbol, 
-      workingPrice, 
-      baseCurrency, 
-      config,
-      kdvStatus,
-      percentageOperation
-    } = result;
+    // Eklenti durumunu kontrol et
+    chrome.storage.local.get(['extensionEnabled'], function(data) {
+      const isExtensionEnabled = data.extensionEnabled !== undefined ? data.extensionEnabled : true;
+      
+      // Eğer eklenti devre dışıysa, container oluşturma
+      if (!isExtensionEnabled) {
+        console.log('Eklenti devre dışı, analiz kutusu oluşturulmayacak');
+        return;
+      }
+      
+      // Container oluştur
+      const container = createContainerElement();
+      
+      // Doküman'a ekle
+      document.body.appendChild(container);
+      console.log(`Price analyze container created for ${currencyType} based site with costMethod: ${result.config ? result.config.costMethod : 'undefined'}`);
+    });
+    
+    // Container element oluşturma fonksiyonu
+    function createContainerElement() {
+      // Dönüşüm sonuçlarından gerekli verileri çıkar
+      const { 
+        convertedPrice, 
+        currencySymbol, 
+        workingPrice, 
+        baseCurrency, 
+        config,
+        kdvStatus,
+        percentageOperation
+      } = result;
 
-    // Container oluştur
-    const container = document.createElement('div');
-    container.className = 'user-price-analyze-container';
-    container.style.cssText = `
-      position: fixed;
-      right: 20px;
-      top: 20px;
-      width: 300px;
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-      padding: 15px;
-      z-index: 999999;
-      font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-      font-size: 14px;
-      color: #333;
-      border: 1px solid ${currencyType === 'euro' ? '#0066cc' : '#dc3545'};
-    `;
+      // Container oluştur
+      const container = document.createElement('div');
+      container.className = 'user-price-analyze-container';
+      container.style.cssText = `
+        position: fixed;
+        right: 20px;
+        top: 20px;
+        width: 300px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        padding: 15px;
+        z-index: 999999;
+        font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+        font-size: 14px;
+        color: #333;
+        border: 1px solid ${currencyType === 'euro' ? '#0066cc' : '#dc3545'};
+      `;
 
-    // Başlık oluştur
-    const titleBar = document.createElement('div');
-    titleBar.style.cssText = `
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 10px;
-    `;
+      // Başlık oluştur
+      const titleBar = document.createElement('div');
+      titleBar.style.cssText = `
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+      `;
 
-    const title = document.createElement('div');
-    title.textContent = currencyType === 'euro' ? 'Euro → TL Dönüşümü' : 'TL → Döviz Dönüşümü';
-    title.style.fontWeight = 'bold';
+      const title = document.createElement('div');
+      title.textContent = currencyType === 'euro' ? 'Euro → TL Dönüşümü' : 'TL → Döviz Dönüşümü';
+      title.style.fontWeight = 'bold';
 
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent = '×';
-    closeBtn.style.cssText = `
-      background: none;
-      border: none;
-      font-size: 20px;
-      cursor: pointer;
-      color: #777;
-      padding: 0;
-      margin: 0;
-    `;
-    closeBtn.onclick = () => container.remove();
+      const closeBtn = document.createElement('button');
+      closeBtn.textContent = '×';
+      closeBtn.style.cssText = `
+        background: none;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        color: #777;
+        padding: 0;
+        margin: 0;
+      `;
+      closeBtn.onclick = () => container.remove();
 
-    titleBar.appendChild(title);
-    titleBar.appendChild(closeBtn);
-    container.appendChild(titleBar);
+      titleBar.appendChild(title);
+      titleBar.appendChild(closeBtn);
+      container.appendChild(titleBar);
 
-    // Orjinal fiyat
-    const originalPriceEl = document.createElement('div');
-    originalPriceEl.style.cssText = `
-      margin-bottom: 10px;
-      font-size: 16px;
-      font-weight: 500;
-    `;
-    originalPriceEl.textContent = `Orjinal Fiyat: ${workingPrice.toFixed(2)} ${baseCurrency}`;
-    container.appendChild(originalPriceEl);
+      // Orjinal fiyat
+      const originalPriceEl = document.createElement('div');
+      originalPriceEl.style.cssText = `
+        margin-bottom: 8px;
+        font-size: 14px;
+        font-weight: 500;
+      `;
+      originalPriceEl.textContent = `Orjinal Fiyat: ${workingPrice.toFixed(2)} ${baseCurrency}`;
+      container.appendChild(originalPriceEl);
 
-    // Dönüştürülmüş fiyat
-    const convertedPriceEl = document.createElement('div');
-    convertedPriceEl.style.cssText = `
-      margin-bottom: 10px;
-      font-size: 18px;
-      font-weight: 600;
-      color: ${currencyType === 'euro' ? '#0066cc' : '#dc3545'};
-    `;
-    convertedPriceEl.textContent = `Dönüştürülmüş: ${currencySymbol}${convertedPrice.toFixed(2)}${kdvStatus || ''}`;
-    container.appendChild(convertedPriceEl);
+      // Dönüştürülmüş fiyat
+      const convertedPriceEl = document.createElement('div');
+      convertedPriceEl.style.cssText = `
+        margin-bottom: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        color: ${currencyType === 'euro' ? '#0066cc' : '#dc3545'};
+      `;
+      convertedPriceEl.textContent = `Dönüştürülmüş: ${currencySymbol}${convertedPrice.toFixed(2)}${kdvStatus || ''}`;
+      container.appendChild(convertedPriceEl);
 
-    // Finans bilgileri (eğer varsa)
-    if (config && config.financeCost) {
-      // Yüzde işlemi için storage'dan değeri al
+      // "Yüzdeleri Ekle" değerini al
       const isAdd = percentageOperation === true;
       const operationSymbol = isAdd ? '+' : '-';
       
-      // Finans maliyeti hesaplama
-      const financePercentage = config.financeCost / 100;
-      const financeAmount = convertedPrice * financePercentage;
-      const financeDiscounted = isAdd ? 
-        convertedPrice + financeAmount : 
-        convertedPrice - financeAmount;
+      // Maliyet hesaplama yöntemini kontrol et - güvenli bir şekilde
+      const costMethod = config && typeof config.costMethod === 'string' ? config.costMethod : 'detailed';
       
-      const financeEl = document.createElement('div');
-      financeEl.style.cssText = `
-        margin-bottom: 8px;
-        color: #28a745;
-      `;
-      financeEl.textContent = `İ.M.F(${operationSymbol}${config.financeCost}%): ${currencySymbol}${financeDiscounted.toFixed(2)}${kdvStatus || ''}`;
-      container.appendChild(financeEl);
-
-      // Satış maliyeti hesaplama (İ.M.F. değerinden sonra)
-      // Sadece salesCostEnabled true ise S.M. değerini göster
-      if (config.salesCostEnabled === true) {
-        console.log('Container içinde S.M. değeri gösteriliyor, config.salesCostEnabled:', config.salesCostEnabled);
-        const salesCost = config.salesCost !== undefined ? config.salesCost : 10;
-        const salesPercentage = salesCost / 100;
-        const salesAmount = financeDiscounted * salesPercentage;
-        const salesDiscounted = isAdd ? 
-          financeDiscounted + salesAmount : 
-          financeDiscounted - salesAmount;
+      console.log(`Maliyet hesaplama yöntemi (createPriceAnalyzeContainer): ${costMethod}`);
+      
+      // Maliyet hesaplama yöntemine göre içerik göster
+      if (costMethod === 'total') {
+        // SADECE toplam maliyet görüntüle
+        console.log('Toplam Masraf modu seçildi, sadece toplam maliyet gösteriliyor.');
         
-        const salesEl = document.createElement('div');
-        salesEl.style.cssText = `
-          margin-bottom: 8px;
-          color: #28a745;
-        `;
-        salesEl.textContent = `S.M.(${operationSymbol}${salesCost}%): ${currencySymbol}${salesDiscounted.toFixed(2)}${kdvStatus || ''}`;
-        container.appendChild(salesEl);
-      } else {
-        console.log('Container içinde S.M. değeri gösterilmiyor, config.salesCostEnabled:', config.salesCostEnabled);
-      }
-
-      // RMA/Yol maliyeti (eğer varsa)
-      if (config.shippingCost) {
-        const shippingPercentage = config.shippingCost / 100;
-        const shippingAmount = financeDiscounted * shippingPercentage;
-        const shippingDiscounted = isAdd ? 
-          financeDiscounted + shippingAmount :
-          financeDiscounted - shippingAmount;
-        
-        const shippingEl = document.createElement('div');
-        shippingEl.style.cssText = `
-          color: #28a745;
-        `;
-        shippingEl.textContent = `RMA(${operationSymbol}${config.shippingCost}%): ${currencySymbol}${shippingDiscounted.toFixed(2)}${kdvStatus || ''}`;
-        container.appendChild(shippingEl);
-        
-        // Satış maliyeti - sadece salesCostEnabled true ise göster
-        if (config.salesCostEnabled) {
-          const salesCost = config.salesCost !== undefined ? config.salesCost : 10;
-          const salesPercentage = salesCost / 100;
-          const salesAmount = shippingDiscounted * salesPercentage;
-          const salesDiscounted = isAdd ? 
-            shippingDiscounted + salesAmount :
-            shippingDiscounted - salesAmount;
+        if (config && typeof config.totalCost !== 'undefined') {
+          // Toplam maliyet hesaplama
+          const totalPercentage = config.totalCost / 100;
+          const totalAmount = convertedPrice * totalPercentage;
+          const totalDiscounted = isAdd ? 
+            convertedPrice + totalAmount : 
+            convertedPrice - totalAmount;
           
-          const salesEl = document.createElement('div');
-          salesEl.style.cssText = `
-            color: #28a745;
+          const totalEl = document.createElement('div');
+          totalEl.style.cssText = `
+            margin-bottom: 6px;
+            color: #006622;
+            font-weight: 600;
+            font-size: 13px;
+            background-color: #e6f7ee;
+            padding: 3px 6px;
+            border-radius: 3px;
+            border: 1px solid #c9e9d9;
           `;
-          salesEl.textContent = `S.M.(${operationSymbol}${salesCost}%): ${currencySymbol}${salesDiscounted.toFixed(2)}${kdvStatus || ''}`;
-          container.appendChild(salesEl);
+          totalEl.textContent = `T.M.(${operationSymbol}${config.totalCost}%): ${currencySymbol}${totalDiscounted.toFixed(2)}${kdvStatus || ''}`;
+          container.appendChild(totalEl);
         }
-      } else {
-        // RMA/Yol maliyeti yoksa S.M. değerini İ.M.F. üzerinden hesapla - yine sadece salesCostEnabled true ise
-        if (config.salesCostEnabled === true) {
-          console.log('RMA yokken S.M. değeri gösteriliyor, config.salesCostEnabled:', config.salesCostEnabled);
-          const salesCost = config.salesCost !== undefined ? config.salesCost : 10;
-          const salesPercentage = salesCost / 100;
-          const salesAmount = financeDiscounted * salesPercentage;
-          const salesDiscounted = isAdd ? 
-            financeDiscounted + salesAmount :
-            financeDiscounted - salesAmount;
+      } 
+      else {
+        // Detaylı masraf modu - İMF ve SM göster
+        console.log('Detaylı Masraf modu seçildi, İMF ve SM gösteriliyor.');
+        
+        if (config && typeof config.financeCost !== 'undefined') {
+          // Finans maliyeti hesaplama
+          const financePercentage = config.financeCost / 100;
+          const financeAmount = convertedPrice * financePercentage;
+          const financeDiscounted = isAdd ? 
+            convertedPrice + financeAmount : 
+            convertedPrice - financeAmount;
           
-          const salesEl = document.createElement('div');
-          salesEl.style.cssText = `
-            color: #28a745;
+          const financeEl = document.createElement('div');
+          financeEl.style.cssText = `
+            margin-bottom: 6px;
+            color: #006622;
+            font-size: 13px;
+            background-color: #e6f7ee;
+            padding: 3px 6px;
+            border-radius: 3px;
+            border: 1px solid #c9e9d9;
           `;
-          salesEl.textContent = `S.M.(${operationSymbol}${salesCost}%): ${currencySymbol}${salesDiscounted.toFixed(2)}${kdvStatus || ''}`;
-          container.appendChild(salesEl);
-        } else {
-          console.log('RMA yokken S.M. değeri gösterilmiyor, config.salesCostEnabled:', config.salesCostEnabled);
+          financeEl.textContent = `İ.M.F(${operationSymbol}${config.financeCost}%): ${currencySymbol}${financeDiscounted.toFixed(2)}${kdvStatus || ''}`;
+          container.appendChild(financeEl);
+
+          // Satış maliyeti hesaplama (İ.M.F. değerinden sonra)
+          if (config.salesCostEnabled === true) {
+            const salesCost = config.salesCost !== undefined ? config.salesCost : 10;
+            const salesPercentage = salesCost / 100;
+            const salesAmount = financeDiscounted * salesPercentage;
+            const salesDiscounted = isAdd ? 
+              financeDiscounted + salesAmount : 
+              financeDiscounted - salesAmount;
+            
+            const salesEl = document.createElement('div');
+            salesEl.style.cssText = `
+              margin-bottom: 6px;
+              color: #006622;
+              font-size: 13px;
+              background-color: #e6f7ee;
+              padding: 3px 6px;
+              border-radius: 3px;
+              border: 1px solid #c9e9d9;
+            `;
+            salesEl.textContent = `S.M.(${operationSymbol}${salesCost}%): ${currencySymbol}${salesDiscounted.toFixed(2)}${kdvStatus || ''}`;
+            container.appendChild(salesEl);
+          }
+
+          // RMA/Yol maliyeti (eğer varsa)
+          if (config.shippingCost) {
+            const shippingEl = document.createElement('div');
+            shippingEl.style.cssText = `
+              margin-bottom: 6px;
+              color: #006622;
+              font-size: 13px;
+              background-color: #e6f7ee;
+              padding: 3px 6px;
+              border-radius: 3px;
+              border: 1px solid #c9e9d9;
+            `;
+            
+            const shippingCost = parseFloat(config.shippingCost);
+            const finalPriceWithShipping = isAdd ? 
+              (financeDiscounted + shippingCost) : 
+              (financeDiscounted - shippingCost);
+            
+            shippingEl.textContent = `Yol/R.M.A(${operationSymbol}${shippingCost}): ${currencySymbol}${finalPriceWithShipping.toFixed(2)}${kdvStatus || ''}`;
+            container.appendChild(shippingEl);
+          }
         }
       }
+      
+      return container;
     }
-
-    // Not ekle
-    const noteEl = document.createElement('div');
-    noteEl.style.cssText = `
-      margin-top: 15px;
-      font-size: 12px;
-      color: #777;
-      border-top: 1px solid #eee;
-      padding-top: 10px;
-    `;
-    noteEl.textContent = 'Bu analiz kullanıcı tarafından eklenen site için oluşturuldu.';
-    container.appendChild(noteEl);
-
-    // Container'ı belgeye ekle
-    document.body.appendChild(container);
-    
-    console.log(`Price analyze container created for ${currencyType} based site`);
-    return container;
   } catch (error) {
     console.error('Error creating price analyze container:', error);
-    return null;
   }
 }
 
 (() => {
   try {
-    // Kur sitelerinde işlem
-    const currentUrl = window.location.href;
-    
-    if (isExchangeRateSite(currentUrl)) {
-      handleExchangeRateSite(currentUrl);
-    } else {
-      // E-ticaret sitelerinde gerekli dinleyicileri kurma
-      setupSiteListeners();
+    // Önce eklentinin etkin olup olmadığını kontrol et
+    chrome.storage.local.get(['extensionEnabled'], function(result) {
+      // Varsayılan olarak eklenti etkin olmalı (undefined ise etkindir)
+      const isEnabled = result.extensionEnabled !== undefined ? result.extensionEnabled : true;
       
-      // Mevcut domain için kaydedilmiş XPath/Selector'ları kontrol et ve uygula
-      checkAndApplySavedSelectors();
-    }
+      console.log(`Eklenti durumu: ${isEnabled ? 'Etkin' : 'Devre dışı'}`);
+      
+      // Sayfada zaten var olan analiz kutularını duruma göre güncelle
+      updateExistingContainers(isEnabled);
+      
+      // Eğer eklenti devre dışıysa, işlemleri yapma
+      if (!isEnabled) {
+        console.log('Eklenti devre dışı, işlemler yapılmayacak');
+        return;
+      }
+      
+      // Kur sitelerinde işlem
+      const currentUrl = window.location.href;
+      
+      if (isExchangeRateSite(currentUrl)) {
+        handleExchangeRateSite(currentUrl);
+      } else {
+        // E-ticaret sitelerinde gerekli dinleyicileri kurma
+        setupSiteListeners();
+        
+        // Mevcut domain için kaydedilmiş XPath/Selector'ları kontrol et ve uygula
+        checkAndApplySavedSelectors();
+      }
+    });
   } catch (error) {
     console.error('Error in main function:', error);
   }
 })();
 
 /**
+ * Sayfada bulunan mevcut analiz kutularını eklenti durumuna göre günceller
+ * @param {boolean} isEnabled - Eklenti durumu
+ */
+function updateExistingContainers(isEnabled) {
+  const containers = document.querySelectorAll('.user-price-analyze-container');
+  if (containers.length > 0) {
+    console.log(`${containers.length} mevcut analiz kutusu bulundu, duruma göre güncelleniyor`);
+    containers.forEach(container => {
+      container.style.display = isEnabled ? 'block' : 'none';
+    });
+  }
+}
+
+/**
  * Mevcut domain için kaydedilmiş XPath/Selector'ları kontrol eder ve uygular
  */
 function checkAndApplySavedSelectors() {
   try {
-    const currentDomain = window.location.hostname;
-    console.log(`Checking saved selectors for domain: ${currentDomain}`);
-    
-    chrome.storage.local.get(['savedDomains'], (result) => {
-      if (chrome.runtime.lastError) {
-        console.error('Error getting storage data:', chrome.runtime.lastError);
+    // Önce eklenti durumunu kontrol et
+    chrome.storage.local.get(['extensionEnabled'], function(result) {
+      const isEnabled = result.extensionEnabled !== undefined ? result.extensionEnabled : true;
+      
+      // Eklenti devre dışıysa işlem yapma
+      if (!isEnabled) {
+        console.log('Eklenti devre dışı, seçiciler uygulanmayacak');
         return;
       }
       
-      const savedDomains = result.savedDomains || [];
-      const domainData = savedDomains.find(domain => domain.hostname === currentDomain);
+      const currentDomain = window.location.hostname;
+      console.log(`Checking saved selectors for domain: ${currentDomain}`);
       
-      if (domainData && domainData.xpath) {
-        console.log(`Found saved selector for domain ${currentDomain}: ${domainData.xpath} (Type: ${domainData.selectorType || 'auto-detect'})`);
+      chrome.storage.local.get(['savedDomains'], (result) => {
+        if (chrome.runtime.lastError) {
+          console.error('Error getting storage data:', chrome.runtime.lastError);
+          return;
+        }
         
-        // Kaydedilmiş XPath veya selector'ı kullan
-        setTimeout(() => {
-          try {
-            // Domain için konfigürasyon oluştur
-            if (typeof DomainHandler !== 'undefined') {
-              const config = {
-                name: "UserDefined",
-                priceSelectors: [domainData.xpath],
-                // Selector tipini belirle (XPath veya CSS)
-                useXPath: domainData.xpath.startsWith('/') || domainData.selectorType === 'xpath',
-                type: domainData.type || 'tl', // varsayılan olarak tl
-                isUserDefined: true // Özel yapılandırma olduğunu belirt
-              };
-              
-              console.log(`Applying selector: ${domainData.xpath}, 
-                          Type: ${domainData.selectorType || 'auto-detected'}, 
-                          useXPath: ${config.useXPath},
-                          currencyType: ${config.type}`);
-              
-              // Eğer DomainHandler varsa, konfigurasyon ekleyelim
-              try {
-                if (typeof DomainHandler.addCustomConfig === 'function') {
-                  const success = DomainHandler.addCustomConfig(config);
-                  console.log(`Custom config added for domain: ${success ? 'Success' : 'Failed'}`);
-                  
-                  // Mevcut dönüşümleri temizleyelim ki yeni seçicileri temiz bir şekilde uygulayabilelim
-                  if (typeof window.clearExistingConversions === 'function') {
-                    window.clearExistingConversions();
-                    console.log('Cleared existing conversion boxes');
+        const savedDomains = result.savedDomains || [];
+        const domainData = savedDomains.find(domain => domain.hostname === currentDomain);
+        
+        if (domainData && domainData.xpath) {
+          console.log(`Found saved selector for domain ${currentDomain}: ${domainData.xpath} (Type: ${domainData.selectorType || 'auto-detect'})`);
+          
+          // Kaydedilmiş XPath veya selector'ı kullan
+          setTimeout(() => {
+            try {
+              // Domain için konfigürasyon oluştur
+              if (typeof DomainHandler !== 'undefined') {
+                const config = {
+                  name: "UserDefined",
+                  priceSelectors: [domainData.xpath],
+                  // Selector tipini belirle (XPath veya CSS)
+                  useXPath: domainData.xpath.startsWith('/') || domainData.selectorType === 'xpath',
+                  type: domainData.type || 'tl', // varsayılan olarak tl
+                  isUserDefined: true // Özel yapılandırma olduğunu belirt
+                };
+                
+                console.log(`Applying selector: ${domainData.xpath}, 
+                            Type: ${domainData.selectorType || 'auto-detected'}, 
+                            useXPath: ${config.useXPath},
+                            currencyType: ${config.type}`);
+                
+                // Eğer DomainHandler varsa, konfigurasyon ekleyelim
+                try {
+                  if (typeof DomainHandler.addCustomConfig === 'function') {
+                    const success = DomainHandler.addCustomConfig(config);
+                    console.log(`Custom config added for domain: ${success ? 'Success' : 'Failed'}`);
+                    
+                    // Mevcut dönüşümleri temizleyelim ki yeni seçicileri temiz bir şekilde uygulayabilelim
+                    if (typeof window.clearExistingConversions === 'function') {
+                      window.clearExistingConversions();
+                      console.log('Cleared existing conversion boxes');
+                    }
                   }
+                } catch (configError) {
+                  console.warn('Error adding custom config:', configError);
                 }
-              } catch (configError) {
-                console.warn('Error adding custom config:', configError);
-              }
-              
-              // Fiyat dönüştürücüyü çalıştır
-              if (typeof window.checkAndConvertPrices === 'function') {
-                console.log('Running price conversion with custom selector...');
-                window.checkAndConvertPrices();
+                
+                // Fiyat dönüştürücüyü çalıştır
+                if (typeof window.checkAndConvertPrices === 'function') {
+                  console.log('Running price conversion with custom selector...');
+                  window.checkAndConvertPrices();
+                } else {
+                  console.warn('checkAndConvertPrices function is not available');
+                }
               } else {
-                console.warn('checkAndConvertPrices function is not available');
+                console.warn('DomainHandler is undefined, cannot apply saved selector');
               }
-            } else {
-              console.warn('DomainHandler is undefined, cannot apply saved selector');
+            } catch (error) {
+              console.error('Error applying saved selector:', error);
             }
-          } catch (error) {
-            console.error('Error applying saved selector:', error);
-          }
-        }, 1500); // Sayfanın tamamen yüklenmesi için biraz bekle
-      } else {
-        console.log(`No saved selector found for domain ${currentDomain}, using default settings if available`);
-      }
+          }, 1500); // Sayfanın tamamen yüklenmesi için biraz bekle
+        } else {
+          console.log(`No saved selector found for domain ${currentDomain}, using default settings if available`);
+        }
+      });
     });
   } catch (error) {
     console.error('Error in checkAndApplySavedSelectors:', error);
@@ -465,7 +523,7 @@ function processPriceConversion(element, parsedPrice, type, hostname) {
       'selectedCurrency', 'financeCost', 'shippingCost',
       'extraCost', 'kdvAction', 'discountAmount',
       'euroPercentageOperation', 'tlPercentageOperation',
-      'salesCost', 'salesCostEnabled'
+      'salesCost', 'salesCostEnabled', 'totalCost', 'costMethod'
     ], (settings) => {
       if (chrome.runtime.lastError) {
         console.error('Error getting storage data:', chrome.runtime.lastError);
@@ -478,7 +536,7 @@ function processPriceConversion(element, parsedPrice, type, hostname) {
         return;
       }
       
-      // Dönüşüm yapılandırması
+      // Dönüşüm yapılandırması - costMethod değerini de doğru şekilde kontrol et
       const config = {
         selectedCurrency: settings.selectedCurrency || 'usd',
         financeCost: settings.financeCost || 0,
@@ -487,8 +545,12 @@ function processPriceConversion(element, parsedPrice, type, hostname) {
         kdvAction: settings.kdvAction || 'none',
         discountAmount: settings.discountAmount || 0,
         salesCost: settings.salesCost || 10,
-        salesCostEnabled: settings.salesCostEnabled || false
+        salesCostEnabled: settings.salesCostEnabled || false,
+        totalCost: settings.totalCost || 15,
+        costMethod: typeof settings.costMethod === 'string' ? settings.costMethod : 'detailed' // Varsayılan olarak 'detailed' kullan
       };
+      
+      console.log("Güncel maliyet hesaplama yöntemi (processPriceConversion):", config.costMethod);
       
       // Para birimi tipine göre doğru dönüştürücüyü seç
       const currencyConverter = type === 'euro' ? window.EuroBasedConverter : window.TryBasedConverter;
@@ -500,6 +562,12 @@ function processPriceConversion(element, parsedPrice, type, hostname) {
       
       // Fiyat dönüşümünü gerçekleştir
       const conversionResult = currencyConverter.convert(parsedPrice, config, settings);
+      
+      // Dönüşüm sonucunu güncelle - costMethod değerini ve totalCost değerini de config'de taşı
+      conversionResult.config = conversionResult.config || {};
+      conversionResult.config.costMethod = config.costMethod;
+      conversionResult.config.totalCost = config.totalCost;
+      
       console.log('Conversion result:', conversionResult);
       
       // Fiyat analiz container'ını oluştur
@@ -642,8 +710,54 @@ function setupMessageListeners() {
       console.log('📩 Content script mesaj aldı:', message);
       
       try {
+        // Eklenti durumunu değiştirme mesajı
+        if (message.action === 'toggleExtension') {
+          console.log(`🔌 Eklenti durumu değişiyor: ${message.enabled ? 'Etkin' : 'Devre dışı'}`);
+          
+          // Eklenti durumunu storage'a kaydet
+          chrome.storage.local.set({ extensionEnabled: message.enabled }, () => {
+            console.log('✅ Eklenti durumu kaydedildi:', message.enabled);
+            
+            // Analiz konteynerlerini göster/gizle
+            const analyzeContainers = document.querySelectorAll('.user-price-analyze-container');
+            analyzeContainers.forEach(container => {
+              if (message.enabled) {
+                container.style.display = 'block';
+              } else {
+                // Kademeli olarak kaldır
+                container.style.opacity = '0';
+                container.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => {
+                  container.style.display = 'none';
+                }, 300);
+              }
+            });
+            
+            // Mevcut dönüşümleri temizle
+            if (!message.enabled && typeof window.clearExistingConversions === 'function') {
+              window.clearExistingConversions();
+              console.log('🧹 Mevcut dönüşüm kutuları temizlendi');
+            } else if (message.enabled) {
+              // Eklenti etkinleştirildiğinde seçicileri yeniden uygula
+              // Önce mevcut dönüşümleri temizleyelim, temiz başlayalım
+              if (typeof window.clearExistingConversions === 'function') {
+                window.clearExistingConversions();
+              }
+              
+              // Biraz gecikme ekleyerek DOM'un güncellenmesine izin verelim
+              setTimeout(() => {
+                checkAndApplySavedSelectors();
+                console.log('🔄 Seçiciler yeniden uygulandı');
+              }, 500);
+            }
+            
+            sendResponse({ success: true, message: `Eklenti ${message.enabled ? 'etkinleştirildi' : 'devre dışı bırakıldı'}` });
+          });
+          
+          return true; // Asenkron yanıt için
+        }
         // Seçicileri yenileme mesajı
-        if (message.action === 'refreshSelectors') {
+        else if (message.action === 'refreshSelectors') {
           console.log('🔄 Seçiciler yenileniyor...');
           
           // Mevcut dönüşümleri temizle
@@ -666,6 +780,11 @@ function setupMessageListeners() {
           if (message.settings) {
             console.log('📦 Gelen ayarlar:', message.settings);
             
+            // costMethod değerini doğru olarak ayarla
+            if (message.settings.costMethod) {
+              console.log(`📊 Maliyet hesaplama yöntemi: ${message.settings.costMethod}`);
+            }
+            
             // salesCostEnabled değerini doğru formatta boolean olarak kaydedelim
             const settings = { ...message.settings };
             settings.salesCostEnabled = settings.salesCostEnabled === true;
@@ -683,8 +802,11 @@ function setupMessageListeners() {
             window.clearExistingConversions();
           }
           
-          // Seçicileri yeniden uygula
-          checkAndApplySavedSelectors();
+          // Seçicileri yeniden uygula - kısa bir gecikme ile
+          setTimeout(() => {
+            checkAndApplySavedSelectors();
+            console.log('⌛ Seçiciler yeniden uygulandı (gecikme ile)');
+          }, 300);
           
           // Yanıt gönder
           sendResponse({ success: true, message: 'Dönüşümler güncellendi' });
@@ -696,6 +818,11 @@ function setupMessageListeners() {
           // Eğer ayarlar mesajla geldiyse, bunları kullan
           if (message.settings) {
             console.log('📦 Gelen dinamik ayarlar:', message.settings);
+            
+            // costMethod değerini kontrol et
+            if (message.settings.costMethod) {
+              console.log(`📊 Dinamik maliyet hesaplama yöntemi: ${message.settings.costMethod}`);
+            }
           }
           
           // Mevcut dönüşümleri temizle ve yeniden uygula
@@ -709,18 +836,25 @@ function setupMessageListeners() {
             const config = DomainHandler.getCurrentConfig();
             if (config && config.isUserDefined) {
               console.log('👤 Kullanıcı tanımlı domain için seçiciler yeniden uygulanıyor');
-              checkAndApplySavedSelectors();
+              // Kısa bir gecikme ekle
+              setTimeout(() => {
+                checkAndApplySavedSelectors();
+              }, 300);
             } else {
               // Standart domain için normal fiyat dönüşümü
-              if (typeof window.checkAndConvertPrices === 'function') {
-                window.checkAndConvertPrices();
-              }
+              setTimeout(() => {
+                if (typeof window.checkAndConvertPrices === 'function') {
+                  window.checkAndConvertPrices();
+                }
+              }, 300);
             }
           } else {
             // Fallback: direkt dönüşüm yap
-            if (typeof window.checkAndConvertPrices === 'function') {
-              window.checkAndConvertPrices();
-            }
+            setTimeout(() => {
+              if (typeof window.checkAndConvertPrices === 'function') {
+                window.checkAndConvertPrices();
+              }
+            }, 300);
           }
           
           // Yanıt gönder

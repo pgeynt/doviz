@@ -17,6 +17,70 @@
       background-color: #02153D;
       color: #fff;
     }
+    
+    /* Toggle Switch Stili */
+    .extension-toggle-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      margin-bottom: 10px;
+      background: rgba(2, 21, 61, 0.7);
+      border-radius: 8px;
+      border: 1px solid #4B227A;
+    }
+    
+    .extension-toggle-label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #00EED0;
+    }
+    
+    .extension-toggle {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    
+    .extension-toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .extension-toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #333;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    
+    .extension-toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .extension-toggle-slider {
+      background-color: #0197AF;
+    }
+    
+    input:checked + .extension-toggle-slider:before {
+      transform: translateX(26px);
+    }
+    
     .rate-container {
       display: flex;
       justify-content: space-between;
@@ -911,6 +975,15 @@
   <!-- Ana İçerik -->
   <div id="main-content" style="display: none;">
     <div class="container-fluid p-2">
+      <!-- Eklenti Durumu Toggle Switch -->
+      <div class="extension-toggle-container">
+        <span class="extension-toggle-label">Eklenti Etkin</span>
+        <label class="extension-toggle" title="Eklentiyi etkinleştir/devre dışı bırak">
+          <input type="checkbox" id="extension-status-toggle" checked>
+          <span class="extension-toggle-slider"></span>
+        </label>
+      </div>
+      
       <!-- Refresh Button -->
       <button id="refreshSelectors" class="refresh-button" title="Seçicileri Yenile">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -981,6 +1054,10 @@
       
       <div class="cost-inputs">
         <div class="percentage-controls">
+          <div style="display: flex; align-items: center; margin-bottom: 8px;">
+            <input type="radio" id="cost-method-1" name="cost-method" value="detailed" checked style="margin-right: 8px;">
+            <label for="cost-method-1" style="color: #00EED0; font-size: 0.9rem; margin-bottom: 0;">Detaylı Masraf</label>
+          </div>
           <div class="percentage-radio-group">
             <span class="percentage-label">İthalat Masraf:</span>
             <div class="discount-options">
@@ -1004,13 +1081,25 @@
               <span class="checkbox-text">Uygula</span>
             </label>
           </div>
+        </div>
 
-          <div class="bottom-checkbox">
-            <label class="checkbox-container" data-tooltip="İşaretlendiğinde yüzdeleri ekler, işaretlenmediğinde çıkarır">
-              <input type="checkbox" id="percentage-operation">
-              <span class="checkbox-text">Yüzdeleri Ekle</span>
-            </label>
+        <div class="additional-cost-box" style="margin-top: 12px; padding: 12px; background: rgba(2, 21, 61, 0.7); border-radius: 8px; border: 1px solid #4B227A;">
+          <div style="display: flex; align-items: center; margin-bottom: 8px;">
+            <input type="radio" id="cost-method-2" name="cost-method" value="total" style="margin-right: 8px;">
+            <label for="cost-method-2" style="color: #00EED0; font-size: 0.9rem; margin-bottom: 0;">Toplam Masraf</label>
           </div>
+          <div class="percentage-row">
+            <span class="percentage-label">Toplam Maliyet:</span>
+            <input type="number" id="total-cost" class="percentage-input" value="15" min="0" max="100">
+            <span style="width: 70px;"></span>
+          </div>
+        </div>
+
+        <div class="bottom-checkbox" style="margin-top: 12px;">
+          <label class="checkbox-container" data-tooltip="İşaretlendiğinde yüzdeleri ekler, işaretlenmediğinde çıkarır">
+            <input type="checkbox" id="percentage-operation">
+            <span class="checkbox-text">Yüzdeleri Ekle</span>
+          </label>
         </div>
 
         <div class="checkbox-group">
@@ -1030,9 +1119,19 @@
             <span style="font-size: 0.9rem; color: #495057;">Birim</span>
           </div>
 
-          <label class="checkbox-container mt-2" data-tooltip="KDV'yi düşürerek hesaplama yapar (%20)">
+          <label class="checkbox-container mt-2" data-tooltip="KDV'yi ekler veya düşürerek hesaplama yapar (%20)">
             <input type="checkbox" id="kdv-discount">
-            <span class="checkbox-text">KDV'yi Düşürt</span>
+            <span class="checkbox-text">KDV Uygula</span>
+            <div class="kdv-radio-group" style="display: inline-flex; margin-left: 8px; gap: 4px; align-items: center;">
+              <div class="radio-container-kdv">
+                <input type="radio" id="kdv-add" name="kdv-action" value="add">
+                <label for="kdv-add">Ekle</label>
+              </div>
+              <div class="radio-container-kdv">
+                <input type="radio" id="kdv-remove" name="kdv-action" value="remove" checked>
+                <label for="kdv-remove">Düşür</label>
+              </div>
+            </div>
           </label>
         </div>
       </div>

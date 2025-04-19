@@ -6,9 +6,9 @@ const akakceConfig = {
   ],
   styles: {
     'a > span.pt_v8': {
-      height: '450px',
+      height: '100px',
       display: 'block',
-      overflow: 'hidden'
+      overflow: 'visible'
     }
   }
 };

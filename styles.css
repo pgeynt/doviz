@@ -119,4 +119,106 @@ label {
   display: none; /* Yukarı ve aşağı okları gizle */
 }
 
+/* Toggle Switch Stili */
+.extension-toggle-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  background: rgba(2, 21, 61, 0.7);
+  border-radius: 8px;
+  border: 1px solid #4B227A;
+  transition: all 0.3s ease;
+}
+
+.extension-toggle-container:hover {
+  border-color: #0197AF;
+  box-shadow: 0 0 8px rgba(1, 151, 175, 0.2);
+}
+
+.extension-toggle-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #00EED0;
+  transition: all 0.3s ease;
+}
+
+.extension-toggle {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.extension-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.extension-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #333;
+  transition: .4s;
+  border-radius: 24px;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.extension-toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
+}
+
+.extension-toggle input:checked + .extension-toggle-slider {
+  background-color: #0197AF;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2), 0 0 8px rgba(1, 151, 175, 0.4);
+}
+
+.extension-toggle input:checked + .extension-toggle-slider:before {
+  transform: translateX(26px);
+}
+
+/* KDV Radio Buttons */
+.radio-container-kdv {
+  position: relative;
+}
+
+.radio-container-kdv input[type="radio"] {
+  display: none;
+}
+
+.radio-container-kdv label {
+  padding: 2px 6px;
+  border-radius: 10px;
+  background-color: #02153D;
+  border: 1px solid #4B227A;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 0;
+  font-size: 0.7rem;
+  color: #fff;
+  display: inline-block;
+}
+
+.radio-container-kdv input[type="radio"]:checked + label {
+  background-color: #4B227A;
+  color: #00EED0;
+  border-color: #0197AF;
+  box-shadow: 0 2px 4px rgba(0,123,255,0.2);
+}
+
 
