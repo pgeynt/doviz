@@ -19,7 +19,7 @@ function createBasicPriceHTML(originalPrice, convertedPrice, currencySymbol, wor
         (config.kdvAction === 'remove' ? workingPrice * 1.20 : workingPrice);
       
       html += `
-        <div style="color: #0066cc; margin-bottom: 2px; font-size: 10px;">
+        <div style="color: #0066cc; margin-bottom: 2px; font-size: 3px;">
           İndirimli: ${displayPrice.toFixed(2)} ${baseCurrency} (-${config.discountAmount})
         </div>
       `;
@@ -27,7 +27,7 @@ function createBasicPriceHTML(originalPrice, convertedPrice, currencySymbol, wor
 
     // Döviz çevrimi gösterimi
     html += `
-      <div style="color: #dc3545; margin-bottom: 2px; font-size: 11px;">
+      <div style="color: #dc3545; margin-bottom: 2px; font-size: 3px;">
         ${currencySymbol}${convertedPrice.toFixed(2)}${kdvStatus}
       </div>
     `;

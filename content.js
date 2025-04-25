@@ -69,26 +69,17 @@ function createPriceAnalyzeContainer(result, currencyType) {
         font-size: 14px;
         color: #333;
         border: 1px solid ${currencyType === 'euro' ? '#0066cc' : '#dc3545'};
+        pointer-events: auto;
+        position: relative;
       `;
 
-      // Başlık oluştur
-      const titleBar = document.createElement('div');
-      titleBar.style.cssText = `
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 10px;
-      `;
-
-      const title = document.createElement('div');
-      title.textContent = currencyType === 'euro' ? 'Euro → TL Dönüşümü' : 'TL → Döviz Dönüşümü';
-      title.style.fontWeight = 'bold';
-
+      // Kapatma butonu
       const closeBtn = document.createElement('button');
       closeBtn.textContent = '×';
       closeBtn.style.cssText = `
+        position: absolute;
+        top: 5px;
+        right: 5px;
         background: none;
         border: none;
         font-size: 20px;
@@ -96,33 +87,84 @@ function createPriceAnalyzeContainer(result, currencyType) {
         color: #777;
         padding: 0;
         margin: 0;
+        z-index: 1000;
       `;
-      closeBtn.onclick = () => container.remove();
-
-      titleBar.appendChild(title);
-      titleBar.appendChild(closeBtn);
-      container.appendChild(titleBar);
-
-      // Orjinal fiyat
-      const originalPriceEl = document.createElement('div');
-      originalPriceEl.style.cssText = `
-        margin-bottom: 8px;
+      closeBtn.onclick = (e) => {
+        e.stopPropagation(); // Tıklamanın balonlanmasını engelle
+        container.remove();
+      };
+      
+      // Küçültme butonu ekle
+      const minimizeBtn = document.createElement('button');
+      minimizeBtn.textContent = '−';
+      minimizeBtn.style.cssText = `
+        position: absolute;
+        top: calc(100% - 15px);
+        right: 5px;
+        background: none;
+        border: none;
         font-size: 14px;
-        font-weight: 500;
+        line-height: 14px;
+        cursor: pointer;
+        color: #777;
+        padding: 0;
+        z-index: 1000;
       `;
-      originalPriceEl.textContent = `Orjinal Fiyat: ${workingPrice.toFixed(2)} ${baseCurrency}`;
-      container.appendChild(originalPriceEl);
+      
+      // Konteyner içeriğini tutan div
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'analyze-box-content';
+      contentDiv.style.cssText = `
+        padding-top: 15px;
+      `;
+      
+      // Minimize/maximize durumu
+      let isMinimized = false;
+      
+      // Küçültme/büyütme fonksiyonu
+      minimizeBtn.onclick = (e) => {
+        e.stopPropagation(); // Tıklamanın balonlanmasını engelle
+        if (isMinimized) {
+          // Büyült
+          contentDiv.style.display = 'block';
+          container.style.height = 'auto';
+          container.style.padding = '15px';
+        } else {
+          // Küçült
+          contentDiv.style.display = 'none';
+          container.style.height = '2px';
+          container.style.padding = '0px 15px';
+          container.style.cursor = 'pointer';
+        }
+        isMinimized = !isMinimized;
+      };
+      
+      // Küçültüldüğünde tüm konteyner tıklanabilir olsun
+      container.addEventListener('click', (e) => {
+        e.stopPropagation(); // Tıklamanın balonlanmasını engelle
+        // Eğer zaten küçültülmüşse ve tıklanan element konteyner ise (butonlar değil)
+        if (isMinimized && e.target === container) {
+          contentDiv.style.display = 'block';
+          container.style.height = 'auto';
+          container.style.padding = '15px';
+          container.style.cursor = 'default';
+          isMinimized = false;
+        }
+      });
+      
+      container.appendChild(closeBtn);
+      container.appendChild(minimizeBtn);
 
-      // Dönüştürülmüş fiyat
+      // Dönüştürülmüş fiyat - daha küçük font boyutu
       const convertedPriceEl = document.createElement('div');
       convertedPriceEl.style.cssText = `
         margin-bottom: 8px;
-        font-size: 15px;
+        font-size: 13px;
         font-weight: 600;
         color: ${currencyType === 'euro' ? '#0066cc' : '#dc3545'};
       `;
-      convertedPriceEl.textContent = `Dönüştürülmüş: ${currencySymbol}${convertedPrice.toFixed(2)}${kdvStatus || ''}`;
-      container.appendChild(convertedPriceEl);
+      convertedPriceEl.textContent = `${currencySymbol}${convertedPrice.toFixed(2)}${kdvStatus || ''}`;
+      contentDiv.appendChild(convertedPriceEl);
 
       // "Yüzdeleri Ekle" değerini al
       const isAdd = percentageOperation === true;
@@ -158,7 +200,7 @@ function createPriceAnalyzeContainer(result, currencyType) {
             border: 1px solid #c9e9d9;
           `;
           totalEl.textContent = `T.M.(${operationSymbol}${config.totalCost}%): ${currencySymbol}${totalDiscounted.toFixed(2)}${kdvStatus || ''}`;
-          container.appendChild(totalEl);
+          contentDiv.appendChild(totalEl);
         }
       } 
       else {
@@ -184,7 +226,7 @@ function createPriceAnalyzeContainer(result, currencyType) {
             border: 1px solid #c9e9d9;
           `;
           financeEl.textContent = `İ.M.F(${operationSymbol}${config.financeCost}%): ${currencySymbol}${financeDiscounted.toFixed(2)}${kdvStatus || ''}`;
-          container.appendChild(financeEl);
+          contentDiv.appendChild(financeEl);
 
           // Satış maliyeti hesaplama (İ.M.F. değerinden sonra)
           if (config.salesCostEnabled === true) {
@@ -206,7 +248,7 @@ function createPriceAnalyzeContainer(result, currencyType) {
               border: 1px solid #c9e9d9;
             `;
             salesEl.textContent = `S.M.(${operationSymbol}${salesCost}%): ${currencySymbol}${salesDiscounted.toFixed(2)}${kdvStatus || ''}`;
-            container.appendChild(salesEl);
+            contentDiv.appendChild(salesEl);
           }
 
           // RMA/Yol maliyeti (eğer varsa)
@@ -228,10 +270,16 @@ function createPriceAnalyzeContainer(result, currencyType) {
               (financeDiscounted - shippingCost);
             
             shippingEl.textContent = `Yol/R.M.A(${operationSymbol}${shippingCost}): ${currencySymbol}${finalPriceWithShipping.toFixed(2)}${kdvStatus || ''}`;
-            container.appendChild(shippingEl);
+            contentDiv.appendChild(shippingEl);
           }
         }
       }
+      
+      // İçerik div'ini container'a ekle
+      container.appendChild(contentDiv);
+      
+      // Animasyon için CSS geçiş efekti ekle
+      container.style.transition = 'all 0.3s ease-in-out';
       
       return container;
     }

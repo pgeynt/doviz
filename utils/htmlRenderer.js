@@ -3,11 +3,7 @@
 // Temel fiyat dönüşüm HTML'ini oluşturma
 function createBasicPriceHTML(originalPrice, convertedPrice, currencySymbol, workingPrice, baseCurrency, config, kdvStatus) {
   try {
-    let html = `
-      <div style="margin-bottom: 5px; color: #333;">
-        <strong>${originalPrice.toFixed(2)} ${baseCurrency}</strong>
-      </div>
-    `;
+    let html = '';
 
     // İndirim gösterimi
     if (config && config.extraCost && config.discountAmount) {
@@ -27,7 +23,7 @@ function createBasicPriceHTML(originalPrice, convertedPrice, currencySymbol, wor
 
     // Döviz çevrimi gösterimi
     html += `
-      <div style="color: #dc3545; margin-bottom: 3px;">
+      <div style="color: #dc3545; margin-bottom: 3px; font-size: 12px;">
         ${currencySymbol}${convertedPrice.toFixed(2)}${kdvStatus}
       </div>
     `;
@@ -275,8 +271,68 @@ function createHepsiburadaHTML(priceData) {
       z-index: 999999 !important;
       visibility: visible !important;
       opacity: 1 !important;
+      transition: all 0.3s ease-in-out;
+      pointer-events: auto !important;
     `;
-    priceInfoElement.innerHTML = html;
+    
+    // Küçültme butonu
+    const minimizeBtn = document.createElement('button');
+    minimizeBtn.textContent = '−';
+    minimizeBtn.style.cssText = `
+      position: absolute;
+      top: calc(100% - 15px);
+      right: 5px;
+      background: none;
+      border: none;
+      font-size: 14px;
+      line-height: 14px;
+      cursor: pointer;
+      color: #777;
+      padding: 0;
+      z-index: 1000;
+    `;
+    
+    // İçerik div'i
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'price-conversion-content';
+    contentDiv.innerHTML = html;
+    
+    // Minimize/maximize durumu
+    let isMinimized = false;
+    
+    // Küçültme/büyütme fonksiyonu
+    minimizeBtn.onclick = (e) => {
+      e.stopPropagation(); // Event balonlanmasını engelle
+      if (isMinimized) {
+        // Büyült
+        contentDiv.style.display = 'block';
+        priceInfoElement.style.height = 'auto';
+        priceInfoElement.style.padding = '8px';
+      } else {
+        // Küçült
+        contentDiv.style.display = 'none';
+        priceInfoElement.style.height = '2px';
+        priceInfoElement.style.padding = '0px 8px';
+        priceInfoElement.style.cursor = 'pointer';
+      }
+      isMinimized = !isMinimized;
+    };
+    
+    // Küçültüldüğünde tüm konteyner tıklanabilir olsun
+    priceInfoElement.addEventListener('click', (e) => {
+      e.stopPropagation(); // Event balonlanmasını engelle
+      // Eğer zaten küçültülmüşse ve tıklanan element konteyner ise (butonlar değil)
+      if (isMinimized && e.target === priceInfoElement) {
+        contentDiv.style.display = 'block';
+        priceInfoElement.style.height = 'auto';
+        priceInfoElement.style.padding = '8px';
+        priceInfoElement.style.cursor = 'default';
+        isMinimized = false;
+      }
+    });
+    
+    priceInfoElement.appendChild(minimizeBtn);
+    priceInfoElement.appendChild(contentDiv);
     
     return {
       element: priceInfoElement,
@@ -322,8 +378,68 @@ function createTrendyolHTML(priceData) {
       z-index: 999999 !important;
       visibility: visible !important;
       opacity: 1 !important;
+      transition: all 0.3s ease-in-out;
+      pointer-events: auto !important;
     `;
-    trendyolDiv.innerHTML = html;
+    
+    // Küçültme butonu
+    const minimizeBtn = document.createElement('button');
+    minimizeBtn.textContent = '−';
+    minimizeBtn.style.cssText = `
+      position: absolute;
+      top: calc(100% - 15px);
+      right: 5px;
+      background: none;
+      border: none;
+      font-size: 14px;
+      line-height: 14px;
+      cursor: pointer;
+      color: #777;
+      padding: 0;
+      z-index: 1000;
+    `;
+    
+    // İçerik div'i
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'price-conversion-content';
+    contentDiv.innerHTML = html;
+    
+    // Minimize/maximize durumu
+    let isMinimized = false;
+    
+    // Küçültme/büyütme fonksiyonu
+    minimizeBtn.onclick = (e) => {
+      e.stopPropagation(); // Event balonlanmasını engelle
+      if (isMinimized) {
+        // Büyült
+        contentDiv.style.display = 'block';
+        trendyolDiv.style.height = 'auto';
+        trendyolDiv.style.padding = '6px 10px';
+      } else {
+        // Küçült
+        contentDiv.style.display = 'none';
+        trendyolDiv.style.height = '2px';
+        trendyolDiv.style.padding = '0px 10px';
+        trendyolDiv.style.cursor = 'pointer';
+      }
+      isMinimized = !isMinimized;
+    };
+    
+    // Küçültüldüğünde tüm konteyner tıklanabilir olsun
+    trendyolDiv.addEventListener('click', (e) => {
+      e.stopPropagation(); // Event balonlanmasını engelle
+      // Eğer zaten küçültülmüşse ve tıklanan element konteyner ise (butonlar değil)
+      if (isMinimized && e.target === trendyolDiv) {
+        contentDiv.style.display = 'block';
+        trendyolDiv.style.height = 'auto';
+        trendyolDiv.style.padding = '6px 10px';
+        trendyolDiv.style.cursor = 'default';
+        isMinimized = false;
+      }
+    });
+    
+    trendyolDiv.appendChild(minimizeBtn);
+    trendyolDiv.appendChild(contentDiv);
 
     return {
       element: trendyolDiv,
@@ -383,7 +499,66 @@ function createEuroBasedHTML(priceData) {
       opacity: 1 !important;
       position: relative !important;
       z-index: 999 !important;
+      transition: all 0.3s ease-in-out;
+      pointer-events: auto !important;
     `;
+
+    // Küçültme butonu
+    const minimizeBtn = document.createElement('button');
+    minimizeBtn.textContent = '−';
+    minimizeBtn.style.cssText = `
+      position: absolute;
+      top: calc(100% - 15px);
+      right: 5px;
+      background: none;
+      border: none;
+      font-size: 14px;
+      line-height: 14px;
+      cursor: pointer;
+      color: #777;
+      padding: 0;
+      z-index: 1000;
+    `;
+    
+    // İçerik div'i
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'price-conversion-content';
+    
+    // Minimize/maximize durumu
+    let isMinimized = false;
+    
+    // Küçültme/büyütme fonksiyonu
+    minimizeBtn.onclick = (e) => {
+      e.stopPropagation(); // Event balonlanmasını engelle
+      if (isMinimized) {
+        // Büyült
+        contentDiv.style.display = 'block';
+        euroBasedDiv.style.height = 'auto';
+        euroBasedDiv.style.padding = '8px 12px';
+      } else {
+        // Küçült
+        contentDiv.style.display = 'none';
+        euroBasedDiv.style.height = '2px';
+        euroBasedDiv.style.padding = '0px 12px';
+        euroBasedDiv.style.cursor = 'pointer';
+      }
+      isMinimized = !isMinimized;
+    };
+    
+    // Küçültüldüğünde tüm konteyner tıklanabilir olsun
+    euroBasedDiv.addEventListener('click', (e) => {
+      e.stopPropagation(); // Event balonlanmasını engelle
+      // Eğer zaten küçültülmüşse ve tıklanan element konteyner ise (butonlar değil)
+      if (isMinimized && e.target === euroBasedDiv) {
+        contentDiv.style.display = 'block';
+        euroBasedDiv.style.height = 'auto';
+        euroBasedDiv.style.padding = '8px 12px';
+        euroBasedDiv.style.cursor = 'default';
+        isMinimized = false;
+      }
+    });
+
+    euroBasedDiv.appendChild(minimizeBtn);
 
     const isAdd = percentageOperation === true;
     const operationSymbol = isAdd ? '+' : '-';
@@ -391,15 +566,7 @@ function createEuroBasedHTML(priceData) {
     let compactHtml = `
       <div style="display: flex; flex-direction: column; gap: 4px;">
         <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-weight: 600; font-size: 14px; color: #333;">
-            ${originalPrice.toFixed(2)} ${baseCurrency}
-          </span>
-        </div>
-
-        <div style="border-top: 1px solid #eee; margin: 4px 0;"></div>
-
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 13px; color: #444;">
+          <span style="font-weight: 600; font-size: 12px; color: #444;">
             ${currencySymbol}${convertedPrice.toFixed(2)}${kdvStatus}
           </span>
         </div>
@@ -415,7 +582,8 @@ function createEuroBasedHTML(priceData) {
     );
 
     compactHtml += `</div>`;
-    euroBasedDiv.innerHTML = compactHtml;
+    contentDiv.innerHTML = compactHtml;
+    euroBasedDiv.appendChild(contentDiv);
 
     return {
       element: euroBasedDiv,
@@ -481,6 +649,8 @@ function createAkakceHTML(priceData) {
       opacity: 1 !important;
       visibility: visible !important;
       transform: none !important;
+      transition: all 0.3s ease-in-out !important;
+      pointer-events: auto !important;
     `;
     
     const conversionDiv = document.createElement('div');
@@ -494,8 +664,68 @@ function createAkakceHTML(priceData) {
       opacity: 1 !important;
       visibility: visible !important;
       transform: none !important;
+      pointer-events: auto !important;
+      position: relative !important;
     `;
-    conversionDiv.innerHTML = html;
+    
+    // Küçültme butonu
+    const minimizeBtn = document.createElement('button');
+    minimizeBtn.textContent = '−';
+    minimizeBtn.style.cssText = `
+      position: absolute;
+      top: calc(100% - 15px);
+      right: 5px;
+      background: none;
+      border: none;
+      font-size: 14px;
+      line-height: 14px;
+      cursor: pointer;
+      color: #777;
+      padding: 0;
+      z-index: 1000;
+    `;
+    
+    // İçerik div'i
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'price-conversion-content';
+    contentDiv.innerHTML = html;
+    
+    // Minimize/maximize durumu
+    let isMinimized = false;
+    
+    // Küçültme/büyütme fonksiyonu
+    minimizeBtn.onclick = (e) => {
+      e.stopPropagation(); // Event balonlanmasını engelle
+      if (isMinimized) {
+        // Büyült
+        contentDiv.style.display = 'block';
+        akakceWrapper.style.height = 'auto';
+        akakceWrapper.style.padding = '8px !important';
+      } else {
+        // Küçült
+        contentDiv.style.display = 'none';
+        akakceWrapper.style.height = '2px';
+        akakceWrapper.style.padding = '0px 8px !important';
+        akakceWrapper.style.cursor = 'pointer';
+      }
+      isMinimized = !isMinimized;
+    };
+    
+    // Küçültüldüğünde tüm konteyner tıklanabilir olsun
+    akakceWrapper.addEventListener('click', (e) => {
+      e.stopPropagation(); // Event balonlanmasını engelle
+      // Eğer zaten küçültülmüşse ve tıklanan element konteyner ise (butonlar değil)
+      if (isMinimized && e.target === akakceWrapper) {
+        contentDiv.style.display = 'block';
+        akakceWrapper.style.height = 'auto';
+        akakceWrapper.style.padding = '8px !important';
+        akakceWrapper.style.cursor = 'default';
+        isMinimized = false;
+      }
+    });
+    
+    conversionDiv.appendChild(minimizeBtn);
+    conversionDiv.appendChild(contentDiv);
     
     akakceWrapper.appendChild(conversionDiv);
 
@@ -550,6 +780,7 @@ function createGenericHTML(priceData) {
       visibility: visible !important;
       opacity: 1 !important;
       margin-left: 10px !important;
+      pointer-events: auto !important;
     `;
     
     const conversionDiv = document.createElement('div');
@@ -565,8 +796,68 @@ function createGenericHTML(priceData) {
       opacity: 1 !important;
       position: relative !important;
       z-index: 999999 !important;
+      transition: all 0.3s ease-in-out;
+      pointer-events: auto !important;
     `;
-    conversionDiv.innerHTML = html;
+    
+    // Küçültme butonu
+    const minimizeBtn = document.createElement('button');
+    minimizeBtn.textContent = '−';
+    minimizeBtn.style.cssText = `
+      position: absolute;
+      top: calc(100% - 15px);
+      right: 5px;
+      background: none;
+      border: none;
+      font-size: 14px;
+      line-height: 14px;
+      cursor: pointer;
+      color: #777;
+      padding: 0;
+      z-index: 1000;
+    `;
+    
+    // İçerik div'i
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'price-conversion-content';
+    contentDiv.innerHTML = html;
+    
+    // Minimize/maximize durumu
+    let isMinimized = false;
+    
+    // Küçültme/büyütme fonksiyonu
+    minimizeBtn.onclick = (e) => {
+      e.stopPropagation(); // Event balonlanmasını engelle
+      if (isMinimized) {
+        // Büyült
+        contentDiv.style.display = 'block';
+        conversionDiv.style.height = 'auto';
+        conversionDiv.style.padding = '8px';
+      } else {
+        // Küçült
+        contentDiv.style.display = 'none';
+        conversionDiv.style.height = '2px';
+        conversionDiv.style.padding = '0px 8px';
+        conversionDiv.style.cursor = 'pointer';
+      }
+      isMinimized = !isMinimized;
+    };
+    
+    // Küçültüldüğünde tüm konteyner tıklanabilir olsun
+    conversionDiv.addEventListener('click', (e) => {
+      e.stopPropagation(); // Event balonlanmasını engelle
+      // Eğer zaten küçültülmüşse ve tıklanan element konteyner ise (butonlar değil)
+      if (isMinimized && e.target === conversionDiv) {
+        contentDiv.style.display = 'block';
+        conversionDiv.style.height = 'auto';
+        conversionDiv.style.padding = '8px';
+        conversionDiv.style.cursor = 'default';
+        isMinimized = false;
+      }
+    });
+    
+    conversionDiv.appendChild(minimizeBtn);
+    conversionDiv.appendChild(contentDiv);
     
     wrapper.appendChild(conversionDiv);
 
