@@ -23,7 +23,7 @@ function createBasicPriceHTML(originalPrice, convertedPrice, currencySymbol, wor
 
     // Döviz çevrimi gösterimi
     html += `
-      <div style="color: #dc3545; margin-bottom: 3px; font-size: 12px;">
+      <div style="color: #dc3545; margin-bottom: 3px; font-size: 10px;">
         ${currencySymbol}${convertedPrice.toFixed(2)}${kdvStatus}
       </div>
     `;
