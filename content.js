@@ -566,12 +566,13 @@ function applyUserSelector(domainData) {
 function processPriceConversion(element, parsedPrice, type, hostname) {
   try {
     // İhtiyaç duyulan verileri storage'dan al
-    chrome.storage.local.get([
+  chrome.storage.local.get([
       'usd', 'eur', 'cny', 'eurusd',
       'selectedCurrency', 'financeCost', 'shippingCost',
       'extraCost', 'kdvAction', 'discountAmount',
       'euroPercentageOperation', 'tlPercentageOperation',
-      'salesCost', 'salesCostEnabled', 'totalCost', 'costMethod'
+      'salesCost', 'salesCostEnabled', 'totalCost', 'costMethod',
+      'domainSettings'
     ], (settings) => {
       if (chrome.runtime.lastError) {
         console.error('Error getting storage data:', chrome.runtime.lastError);
@@ -584,18 +585,22 @@ function processPriceConversion(element, parsedPrice, type, hostname) {
         return;
       }
       
+      // Domain bazlı ayarları al
+      const domainData = (settings.domainSettings && settings.domainSettings[hostname]) || {};
+      const merged = { ...settings, ...domainData };
+
       // Dönüşüm yapılandırması - costMethod değerini de doğru şekilde kontrol et
       const config = {
-        selectedCurrency: settings.selectedCurrency || 'usd',
-        financeCost: settings.financeCost || 0,
-        shippingCost: settings.shippingCost || 0,
-        extraCost: settings.extraCost || false,
-        kdvAction: settings.kdvAction || 'none',
-        discountAmount: settings.discountAmount || 0,
-        salesCost: settings.salesCost || 10,
-        salesCostEnabled: settings.salesCostEnabled || false,
-        totalCost: settings.totalCost || 15,
-        costMethod: typeof settings.costMethod === 'string' ? settings.costMethod : 'detailed' // Varsayılan olarak 'detailed' kullan
+        selectedCurrency: merged.selectedCurrency || 'usd',
+        financeCost: merged.financeCost || 0,
+        shippingCost: merged.shippingCost || 0,
+        extraCost: merged.extraCost || false,
+        kdvAction: merged.kdvAction || 'none',
+        discountAmount: merged.discountAmount || 0,
+        salesCost: merged.salesCost || 10,
+        salesCostEnabled: merged.salesCostEnabled || false,
+        totalCost: merged.totalCost || 15,
+        costMethod: typeof merged.costMethod === 'string' ? merged.costMethod : 'detailed' // Varsayılan olarak 'detailed' kullan
       };
       
       console.log("Güncel maliyet hesaplama yöntemi (processPriceConversion):", config.costMethod);
